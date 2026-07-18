@@ -1,0 +1,2840 @@
+<!DOCTYPE html>
+
+<html lang="pt">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Óptica Geométrica — Módulo Interactivo</title>
+<style>
+/* ── FARADAY-STYLE VISUAL THEME ── */
+
+:root {
+ --bg: #f8fafc;
+ --bg2: #f1f5f9;
+ --bg3: #e2e8f0;
+ --card: #ffffff;
+ --borda: #cbd5e1;
+ --borda2: #dbeafe;
+ --azul: #2563eb;
+ --azul2: #1d4ed8;
+ --azul3: #3b82f6;
+ --azul-bg: #eff6ff;
+ --texto: #0f172a;
+ --texto2: #475569;
+ --texto3: #64748b;
+ --verde: #059669;
+ --verde2: #10b981;
+ --vermelho:#dc2626;
+ --laranja: #ea580c;
+ --amarelo: #ca8a04;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+
+body{
+ font-family: Arial, Helvetica, sans-serif;
+ background: var(--bg);
+ color: var(--texto);
+ min-height:100vh;
+ overflow-x:hidden;
+}
+
+/* ── PARTICULAS DE FUNDO ── */
+#bg-canvas{
+ position:fixed;top:0;left:0;width:100%;height:100%;
+ pointer-events:none;z-index:0;opacity:0.12;
+}
+
+/* ── LAYOUT ── */
+.wrap{position:relative;z-index:1;}
+
+/* ── SPLASH SCREEN ── */
+#splash{
+ position:fixed;inset:0;z-index:999;
+ background: var(--bg);
+ display:flex;flex-direction:column;
+ align-items:center;justify-content:center;
+ transition:opacity 0.8s ease;
+}
+.splash-ray{
+ width:2px;height:0;
+ background:linear-gradient(to bottom,transparent,var(--azul),transparent);
+ animation:rayGrow 1.5s ease forwards;
+ margin-bottom:32px;
+}
+@keyframes rayGrow{to{height:200px;}}
+.splash-title{
+ font-family: Arial, Helvetica, sans-serif;
+ font-size:clamp(32px,6vw,64px);
+ color: var(--azul2);
+ text-align:center;
+ animation:fadeUp 1s 0.8s both;
+ font-weight: 700;
+}
+.splash-sub{
+ color:var(--texto3);font-size:16px;margin-top:12px;
+ animation:fadeUp 1s 1.1s both;
+}
+.splash-btn{
+ margin-top:36px;
+ padding:14px 40px;
+ background: var(--azul);
+ color:#fff;font-weight:700;font-size:15px;
+ border:none;border-radius:8px;cursor:pointer;
+ font-family: Arial, Helvetica, sans-serif;
+ box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+ animation:fadeUp 1s 1.4s both;
+ transition:all 0.2s;
+}
+.splash-btn:hover{transform:scale(1.03);box-shadow:0 6px 20px rgba(37, 99, 235, 0.4);}
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── HEADER ── */
+.header{
+ background: var(--card);
+ backdrop-filter:blur(20px);
+ border-bottom:1px solid var(--borda);
+ padding:0 28px;
+ position:sticky;top:0;z-index:100;
+ display:flex;align-items:center;gap:20px;height:62px;
+ box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.hlogo{
+ font-family: Arial, Helvetica, sans-serif;
+ font-size:20px;
+ color: var(--azul2);
+ white-space:nowrap;
+ font-weight: 700;
+}
+.hprog{flex:1;max-width:260px;}
+.hprog-label{font-size:11px;color:var(--texto3);display:flex;justify-content:space-between;margin-bottom:5px;}
+.hprog-bar{height:5px;background:var(--bg3);border-radius:99px;overflow:hidden;}
+.hprog-fill{height:100%;background: var(--azul);border-radius:99px;transition:width 0.5s;}
+.hbadge{
+ margin-left:auto;
+ background: var(--azul-bg);
+ border:1px solid #93c5fd;
+ color: var(--azul);padding:5px 14px;border-radius:99px;
+ font-size:12px;font-weight:600;white-space:nowrap;
+}
+
+/* ── MAIN LAYOUT ── */
+.layout{display:flex;max-width:1300px;margin:0 auto;}
+
+/* ── SIDEBAR ── */
+.sidebar{
+ width:240px;flex-shrink:0;
+ background: var(--card);
+ border-right:1px solid var(--borda);
+ padding:20px 0;
+ position:sticky;top:62px;
+ height:calc(100vh - 62px);
+ overflow-y:auto;
+}
+.sb-section{
+ font-size:10px;font-weight:700;
+ color:var(--texto3);letter-spacing:1.5px;
+ text-transform:uppercase;
+ padding:0 18px 10px;
+ margin-top:16px;
+}
+.sb-section:first-child{margin-top:0;}
+.nav-btn{
+ display:flex;align-items:center;gap:10px;
+ padding:11px 18px;cursor:pointer;
+ border-left:3px solid transparent;
+ font-size:13px;color:var(--texto2);
+ transition:all 0.2s;
+}
+.nav-btn:hover{background: var(--bg2);color:var(--texto);}
+.nav-btn.active{
+ background: var(--azul-bg);
+ border-left-color: var(--azul);color: var(--azul2);font-weight:600;
+}
+.nav-btn.done{color: var(--verde);}
+.nav-btn.done .nb-num{background: rgba(5, 150, 105, 0.1);color: var(--verde);}
+.nb-num{
+ width:24px;height:24px;border-radius:50%;
+ background: var(--bg3);
+ display:flex;align-items:center;justify-content:center;
+ font-size:11px;font-weight:700;flex-shrink:0;
+ color: var(--texto3);
+}
+.nav-btn.active .nb-num{background: var(--azul);color:#fff;}
+
+/* ── CONTENT ── */
+.main{flex:1;padding:36px 40px;min-width:0;}
+
+/* ── SECTIONS ── */
+.sec{display:none;animation:fadeIn 0.4s ease;}
+.sec.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:translateY(0);}}
+
+/* ── HERO BANNER ── */
+.hero{
+ background: var(--card);
+ border:1px solid var(--borda);border-radius:12px;
+ padding:48px;margin-bottom:28px;
+ position:relative;overflow:hidden;
+ box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+}
+.hero::after{
+ content:'';position:absolute;right:-60px;top:50%;transform:translateY(-50%);
+ width:300px;height:300px;
+ background:radial-gradient(circle, rgba(37, 99, 235, 0.06), transparent 70%);
+ border-radius:50%;
+}
+.hero-tag{
+ display:inline-flex;align-items:center;gap:6px;
+ background: var(--azul-bg);border:1px solid #93c5fd;
+ color: var(--azul);padding:5px 14px;border-radius:99px;
+ font-size:12px;font-weight:600;margin-bottom:18px;letter-spacing:0.5px;
+}
+.hero h1{
+ font-family: Arial, Helvetica, sans-serif;
+ font-size:clamp(28px,4vw,44px);line-height:1.15;margin-bottom:14px;
+ color: var(--azul2);
+ font-weight: 700;
+}
+.hero p{color:var(--texto2);font-size:15px;max-width:500px;line-height:1.75;}
+.hero-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:24px;}
+.chip{
+ display:inline-flex;align-items:center;gap:5px;
+ background: var(--bg2);border:1px solid var(--borda);
+ color:var(--texto2);padding:5px 12px;border-radius:99px;font-size:12px;
+}
+
+/* ── TOPIC GRID (intro) ── */
+.topic-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:28px;}
+.topic-card{
+ background: var(--card);border:1px solid var(--borda);border-radius:12px;
+ padding:20px 16px;cursor:pointer;transition:all 0.25s;text-align:center;
+ box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+.topic-card:hover{border-color: var(--azul);transform:translateY(-3px);box-shadow:0 8px 24px rgba(37, 99, 235, 0.1);}
+.topic-icon{font-size:32px;margin-bottom:10px;}
+.topic-num{font-size:10px;color:var(--texto3);font-weight:600;letter-spacing:1px;margin-bottom:4px;}
+.topic-name{font-size:14px;font-weight:700;color:var(--texto);}
+.topic-desc{font-size:11px;color:var(--texto2);margin-top:5px;line-height:1.4;}
+
+/* ── SEC HEADER ── */
+.sec-head{display:flex;align-items:center;gap:16px;margin-bottom:28px;}
+.sec-icon{
+ width:52px;height:52px;border-radius:12px;
+ background: var(--azul);
+ display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;
+ color: #fff;
+}
+.sec-title h2{font-size:26px;font-weight:700;color: var(--azul2);}
+.sec-title p{color:var(--texto2);font-size:13px;margin-top:3px;}
+
+/* ── CARDS ── */
+.card{
+ background: var(--card);border:1px solid var(--borda);
+ border-radius:12px;padding:24px;margin-bottom:20px;
+ box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+.card-title{
+ font-size:12px;font-weight:700;
+ color: var(--azul);text-transform:uppercase;letter-spacing:1.2px;
+ margin-bottom:14px;display:flex;align-items:center;gap:8px;
+}
+
+/* ── ACTIVAÇÃO ── */
+.activ{
+ background: var(--azul-bg);
+ border:1px solid #93c5fd;
+ border-radius:12px;padding:20px;margin-bottom:22px;
+}
+.activ-tag{font-size:10px;font-weight:700;color: var(--azul);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.activ p{font-family: Arial, Helvetica, sans-serif;font-style:italic;font-size:17px;line-height:1.65;color:var(--texto);}
+
+/* ── CANVAS SIM ── */
+.sim-box{
+ background: var(--bg2);border:1px solid var(--borda);border-radius:12px;
+ overflow:hidden;margin:16px 0;position:relative;
+}
+.sim-box canvas{display:block;width:100%;cursor:crosshair;}
+.sim-controls{
+ padding:16px 20px;border-top:1px solid var(--borda);
+ display:flex;gap:16px;flex-wrap:wrap;align-items:center;
+ background: var(--card);
+}
+.ctrl-group{display:flex;flex-direction:column;gap:5px;min-width:140px;}
+.ctrl-label{font-size:11px;color:var(--texto3);font-weight:600;display:flex;justify-content:space-between;}
+.ctrl-val{color: var(--azul);font-family:'Courier New',monospace;font-size:12px;}
+input[type=range]{
+ width:100%;-webkit-appearance:none;height:4px;
+ background:var(--bg3);border-radius:99px;outline:none;
+}
+input[type=range]::-webkit-slider-thumb{
+ -webkit-appearance:none;width:16px;height:16px;
+ background: var(--azul);border-radius:50%;cursor:pointer;
+ box-shadow:0 0 8px rgba(37, 99, 235, 0.4);
+}
+.sim-legend{
+ padding:12px 20px;border-top:1px solid var(--borda);
+ display:flex;gap:16px;flex-wrap:wrap;
+ background: var(--card);
+}
+.leg-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--texto2);}
+.leg-dot{width:20px;height:3px;border-radius:99px;}
+
+/* ── FORMULA ── */
+.formula-wrap{
+ background: var(--azul-bg);
+ border:1px solid #93c5fd;
+ border-radius:12px;padding:24px;text-align:center;margin:16px 0;
+}
+.formula{
+ font-family:'Courier New',monospace;
+ font-size:clamp(22px,4vw,36px);font-weight:600;
+ color: var(--azul2);letter-spacing:2px;margin-bottom:10px;
+}
+.formula-chips{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.fchip{
+ background: var(--bg2);border:1px solid var(--borda);
+ color: var(--azul);padding:4px 12px;border-radius:99px;font-size:12px;
+ font-family:'Courier New',monospace;
+}
+
+/* ── INFO GRID ── */
+.info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
+.info-item{
+ background: var(--bg2);border:1px solid var(--borda);border-radius:12px;padding:16px;
+ transition:all 0.2s;
+}
+.info-item:hover{border-color: var(--azul);transform:translateY(-2px);}
+.info-item .ii-icon{font-size:26px;margin-bottom:8px;}
+.info-item .ii-title{font-size:14px;font-weight:700;margin-bottom:4px;color: var(--texto);}
+.info-item .ii-desc{font-size:12px;color:var(--texto2);line-height:1.5;}
+
+/* ── TABS ── */
+.tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.tab{
+ padding:8px 18px;border-radius:99px;font-size:13px;font-weight:600;
+ cursor:pointer;border:1px solid var(--borda);color:var(--texto2);
+ transition:all 0.2s;background: var(--bg2);
+}
+.tab:hover{border-color: var(--azul);color: var(--azul);}
+.tab.active{background: var(--azul);border-color: var(--azul);color:#fff;}
+.tab-content{display:none;}
+.tab-content.active{display:block;animation:fadeIn 0.3s ease;}
+
+/* ── QUIZ ── */
+.qblock{margin-bottom:26px;}
+.q-num{font-size:11px;color: var(--azul3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.q-text{font-size:16px;font-weight:600;line-height:1.5;margin-bottom:14px;color: var(--texto);}
+.q-opts{display:flex;flex-direction:column;gap:9px;}
+.q-opt{
+ padding:13px 18px;border:1px solid var(--borda);border-radius:10px;
+ cursor:pointer;transition:all 0.2s;font-size:14px;
+ display:flex;align-items:center;gap:12px;background: var(--bg2);
+ color: var(--texto);
+}
+.q-opt:hover{border-color: var(--azul);background: var(--azul-bg);}
+.q-opt.right{border-color: var(--verde);background:rgba(5, 150, 105, 0.08);color: var(--verde);}
+.q-opt.wrong{border-color: var(--vermelho);background:rgba(220, 38, 38, 0.06);color: var(--vermelho);}
+.q-opt.off{pointer-events:none;}
+.q-letter{
+ width:28px;height:28px;border-radius:50%;background: var(--bg3);
+ display:flex;align-items:center;justify-content:center;
+ font-size:12px;font-weight:700;flex-shrink:0;
+ color: var(--texto2);
+}
+.q-fb{
+ display:none;padding:12px 16px;border-radius:10px;
+ margin-top:10px;font-size:13px;line-height:1.6;
+}
+.q-fb.show{display:block;}
+.q-fb.ok{background:rgba(5, 150, 105, 0.08);border:1px solid var(--verde);color: var(--verde);}
+.q-fb.err{background:rgba(220, 38, 38, 0.06);border:1px solid var(--vermelho);color: var(--vermelho);}
+.q-open-input{width:100%;min-height:80px;padding:12px;border:1px solid var(--borda);border-radius:8px;font-family:Arial,Helvetica,sans-serif;font-size:14px;color:var(--texto);resize:vertical;margin-top:8px;box-sizing:border-box;background:var(--bg2);}
+.q-open-input:focus{outline:2px solid var(--azul);border-color:var(--azul);}
+.q-fb.reveal{background:rgba(37, 99, 235, 0.06);border:1px solid var(--azul);color:var(--texto);}
+.q-tag-open{display:inline-block;font-size:11px;font-weight:700;color:var(--azul);background:rgba(37, 99, 235, 0.08);padding:2px 8px;border-radius:6px;margin-left:8px;vertical-align:middle;}
+
+/* ── SCORE ── */
+.score-box{
+ display:none;background: var(--card);
+ border:2px solid var(--azul);border-radius:16px;padding:40px;text-align:center;
+}
+.score-box.show{display:block;animation:fadeIn 0.5s ease;}
+.score-ring{
+ width:110px;height:110px;border-radius:50%;margin:0 auto 20px;
+ background:conic-gradient(var(--azul) 0%, var(--bg3) 0%);
+ display:flex;align-items:center;justify-content:center;
+ font-size:28px;font-weight:700;color: var(--azul2);
+ position:relative;
+}
+.score-ring::before{
+ content:'';position:absolute;inset:10px;border-radius:50%;background: var(--card);
+}
+.score-ring span{position:relative;z-index:1;}
+.score-msg{font-size:22px;font-weight:700;margin-bottom:8px;color: var(--texto);}
+.score-sub{color:var(--texto2);font-size:14px;}
+
+/* ── BTNS ── */
+.btn{
+ padding:11px 26px;border-radius:8px;font-size:14px;font-weight:700;
+ cursor:pointer;border:none;transition:all 0.2s;font-family: Arial, Helvetica, sans-serif;
+}
+.btn-luz{background: var(--azul);color:#fff;box-shadow:0 4px 12px rgba(37, 99, 235, 0.25);}
+.btn-luz:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(37, 99, 235, 0.35);}
+.btn-ghost{background: var(--bg2);color:var(--texto);border:1px solid var(--borda);}
+.btn-ghost:hover{border-color: var(--azul);color: var(--azul);}
+
+/* ── NAV BOTTOM ── */
+.nav-bot{
+ display:flex;justify-content:space-between;align-items:center;
+ margin-top:40px;padding-top:24px;border-top:1px solid var(--borda);
+}
+
+/* ── CONCEITO ITEMS ── */
+.conceito-list{display:flex;flex-direction:column;gap:12px;}
+.ci{
+ background: var(--bg2);border:1px solid var(--borda);border-radius:12px;
+ padding:16px;display:flex;gap:16px;align-items:flex-start;
+ transition:all 0.2s;
+}
+.ci:hover{border-color: var(--azul);}
+.ci-icon{font-size:28px;flex-shrink:0;}
+.ci-body strong{font-size:15px;color:var(--texto);}
+.ci-body p{font-size:13px;color:var(--texto2);margin-top:4px;line-height:1.6;}
+.ci-body .code{
+ font-family:'Courier New',monospace;font-size:13px;
+ color: var(--azul);background: var(--azul-bg);
+ border:1px solid #93c5fd;
+ padding:3px 10px;border-radius:6px;display:inline-block;margin-top:6px;
+}
+
+/* ── STEP ── */
+.steps{display:flex;flex-direction:column;gap:0;}
+.step{display:flex;gap:16px;position:relative;}
+.step:not(:last-child)::before{
+ content:'';position:absolute;left:15px;top:36px;bottom:-12px;
+ width:2px;background: var(--borda);
+}
+.step-n{
+ width:32px;height:32px;border-radius:50%;flex-shrink:0;
+ background: var(--azul);
+ display:flex;align-items:center;justify-content:center;
+ font-size:14px;font-weight:700;color:#fff;
+}
+.step-b{flex:1;padding-bottom:24px;}
+.step-b strong{font-size:14px;color:var(--texto);}
+.step-b p{font-size:13px;color:var(--texto2);margin-top:4px;line-height:1.6;}
+.step-code{
+ font-family:'Courier New',monospace;
+ background: var(--bg2);border:1px solid var(--borda);
+ border-radius:8px;padding:10px 14px;font-size:14px;
+ color: var(--azul2);margin-top:8px;display:inline-block;
+}
+
+/* ── TABLE ── */
+.tbl{width:100%;border-collapse:collapse;font-size:13px;}
+.tbl th{padding:11px 14px;text-align:left;color:var(--texto2);font-weight:600;border-bottom:1px solid var(--borda);background: var(--bg2);}
+.tbl td{padding:11px 14px;border-bottom:1px solid var(--borda);color:var(--texto2);}
+.tbl tr:last-child td{border-bottom:none;}
+.tbl tr:hover td{background:rgba(37, 99, 235, 0.02);}
+.tbl td.fill{min-width:110px;min-height:20px;cursor:text;background:rgba(37,99,235,0.03);}
+.tbl td.fill:empty:before{content:"escreve aqui...";color:#94a3b8;font-style:italic;font-size:12px;}
+.tbl td.fill:focus{outline:2px solid var(--azul);background:rgba(37,99,235,0.08);}
+
+/* ── RESPONSIVE ── */
+@media(max-width:768px){
+ .sidebar{display:none;}
+ .main{padding:20px 16px;}
+ .hero{padding:28px 20px;}
+ .sim-controls{flex-direction:column;}
+}
+
+/* ── INTERACTIVE MIRROR ── */
+.mirror-stage{
+ position:relative;background: var(--bg2);border:1px solid var(--borda);
+ border-radius:12px;overflow:hidden;
+}
+
+/* ── TOOLTIP ── */
+.tip{
+ background: var(--bg2);border:1px solid var(--borda);
+ padding:8px 14px;border-radius:8px;font-size:12px;color:var(--texto2);
+ margin-top:10px;display:flex;gap:6px;align-items:flex-start;
+}
+.tip-icon{flex-shrink:0;color: var(--azul);}
+
+
+/* ── MELHORIAS PEDAGÓGICAS: DASHBOARD, GAMIFICAÇÃO E CERTIFICADO ── */
+.dash-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin:18px 0;}
+.dash-card{background: var(--card);border:1px solid var(--borda);border-radius:12px;padding:18px;position:relative;overflow:hidden;box-shadow: 0 2px 6px rgba(0,0,0,0.03);}
+.dash-card::after{content:'';position:absolute;right:-30px;top:-30px;width:90px;height:90px;border-radius:50%;background: rgba(37, 99, 235, 0.04);}
+.dash-label{font-size:11px;color:var(--texto3);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px;}
+.dash-value{font-size:28px;font-weight:700;color: var(--azul2);line-height:1;}
+.dash-sub{font-size:12px;color:var(--texto2);margin-top:6px;line-height:1.5;}
+.xp-wrap{margin-top:12px;background: var(--bg3);border:1px solid var(--borda);border-radius:99px;height:12px;overflow:hidden;}
+.xp-fill{height:100%;width:0%;background:linear-gradient(90deg, var(--verde), var(--azul3));transition:width .5s ease;}
+.pathway{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:12px;}
+.path-step{background: var(--bg2);border:1px solid var(--borda);border-radius:12px;padding:12px;text-align:center;font-size:12px;color:var(--texto2);}
+.path-step strong{display:block;color:var(--texto);font-size:13px;margin:5px 0;}
+.path-step.done{border-color: var(--verde);color: var(--verde);background:rgba(5, 150, 105, 0.06);}
+.badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+.medal{padding:7px 12px;border-radius:99px;background: var(--bg2);border:1px solid var(--borda);font-size:12px;color:var(--texto2);}
+.medal.on{background: var(--azul-bg);border-color: var(--azul);color: var(--azul);box-shadow:0 0 18px rgba(37, 99, 235, 0.08);}
+.study-tip{border-left:4px solid var(--azul);background: var(--azul-bg);padding:14px 16px;border-radius:12px;margin:12px 0;color:var(--texto2);font-size:13px;line-height:1.65;}
+.lab-card{background: var(--card);border:1px solid #93c5fd;border-radius:12px;padding:20px;margin-bottom:20px;box-shadow: 0 2px 6px rgba(0,0,0,0.03);}
+.challenge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:12px;margin-top:12px;}
+.challenge{background: var(--bg2);border:1px solid var(--borda);border-radius:12px;padding:14px;font-size:13px;color:var(--texto2);line-height:1.55;}
+.challenge strong{color: var(--azul);display:block;margin-bottom:6px;}
+.cert-box{display:none;background: var(--card);color: var(--texto);border-radius:16px;padding:28px;margin-top:18px;text-align:center;border:4px double var(--azul);font-family: Arial, Helvetica, sans-serif;box-shadow: 0 4px 12px rgba(0,0,0,0.06);}
+.cert-box.show{display:block;}
+.cert-title{font-family: Arial, Helvetica, sans-serif;font-size:32px;font-weight:700;color: var(--azul2);margin-bottom:8px;}
+.cert-name{font-size:24px;font-weight:700;color: var(--texto);border-bottom:2px solid var(--azul);display:inline-block;padding:5px 40px;margin:12px 0;}
+.cert-sub{font-size:13px;color:var(--texto2);line-height:1.6;}
+.float-panel{position:fixed;left:18px;bottom:18px;z-index:120;background: var(--card);backdrop-filter:blur(16px);border:1px solid var(--borda);border-radius:12px;padding:12px 14px;min-width:140px;width:140px;box-shadow:0 6px 20px rgba(0,0,0,0.08);}
+.float-title{font-size:11px;color:var(--texto3);text-transform:uppercase;letter-spacing:1px;font-weight:700;}
+.float-xp{font-size:17px;font-weight:700;color: var(--azul2);}
+@media(max-width:768px){.float-panel{left:12px;right:12px;bottom:10px;min-width:0}.dash-grid{grid-template-columns:1fr 1fr}.cert-title{font-size:24px}}
+
+/* ── ASSINATURA ── */
+.assinatura{
+  position: fixed;
+  right: 18px;
+  bottom: 18px;
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  z-index: 120;
+  background: rgba(255,255,255,0.92);
+  backdrop-filter: blur(8px);
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 8px 14px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  font-family: Arial, Helvetica, sans-serif;
+}
+@media(max-width:768px){
+  .assinatura{right:12px;bottom:12px;font-size:11px;padding:6px 10px;}
+}
+</style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<!-- SPLASH -->
+<div id="splash">
+<div class="splash-ray"></div>
+<div style="font-size:16px;color:var(--texto2);letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;animation:fadeUp 1s 0.5s both;">Módulo Interactivo</div>
+<div class="splash-title">Óptica Geométrica</div>
+<div class="splash-sub">6 Aulas · Simuladores · Quiz por aula · Avaliação Final</div>
+<button class="splash-btn" onclick="enterModule()">✦ Entrar no Módulo</button>
+</div>
+<div class="wrap" id="app" style="display:none;">
+<div class="float-panel" id="floatPanel"><div class="float-title">Progresso do aluno</div><div class="float-xp" id="floatXP">0 XP</div><div id="floatRank" style="font-size:12px;color:var(--texto2);">Iniciante da Luz</div></div>
+<!-- HEADER -->
+<div class="header">
+<div class="hlogo">✦ Óptica Geométrica</div>
+<div class="hprog">
+<div class="hprog-label"><span>Progresso</span><span id="hpct">0%</span></div>
+<div class="hprog-bar"><div class="hprog-fill" id="hfill" style="width:0%"></div></div>
+</div>
+<div class="hbadge" id="hbadge">🌟 Início</div>
+<div class="hbadge" id="hUserBadge" style="background:var(--bg2);border-color:var(--borda);color:var(--texto2);">Aluno</div>
+<button onclick="sairModulo()" style="margin-left:6px;background:var(--bg2);border:1px solid var(--borda);color:var(--texto2);padding:6px 14px;border-radius:99px;font-size:12px;cursor:pointer;font-family:inherit;">Sair</button>
+</div>
+<div class="layout">
+<!-- SIDEBAR -->
+<div class="sidebar">
+<div class="sb-section">Início</div>
+<div class="nav-btn active" id="nb0" onclick="goTo(0)">Introdução</div>
+<div class="sb-section">6 Aulas</div>
+<div class="nav-btn" id="nb1" onclick="goTo(1)"><div class="nb-num">1</div>Propagação da Luz</div>
+<div class="nav-btn" id="nb2" onclick="goTo(2)"><div class="nb-num">2</div>Reflexão da Luz</div>
+<div class="nav-btn" id="nb3" onclick="goTo(3)"><div class="nb-num">3</div>Refracção da Luz</div>
+<div class="nav-btn" id="nb4" onclick="goTo(4)"><div class="nb-num">4</div>Espelhos Planos</div>
+<div class="nav-btn" id="nb5" onclick="goTo(5)"><div class="nb-num">5</div>Espelhos Esféricos</div>
+<div class="nav-btn" id="nb6" onclick="goTo(6)"><div class="nb-num">6</div>Lentes Ópticas</div>
+<div class="sb-section">Avaliação</div>
+<div class="nav-btn" id="nb7" onclick="goTo(7)"><div class="nb-num">✎</div>Avaliação Final</div>
+<div class="sb-section">Turma</div>
+<div class="nav-btn" id="nbComm" onclick="goToComunicacao()"><div class="nb-num">💬</div>Comunicação</div>
+</div>
+<!-- MAIN -->
+<div class="main">
+<!-- ══ SEC 0: INTRO ══ -->
+<div class="sec active" id="sec0">
+<div class="card" id="prazoBanner" style="display:none;border-color:#93c5fd;background:var(--azul-bg);">
+<div class="card-title">⏳ Prazo da Avaliação Final</div>
+<p id="prazoTexto" style="font-size:14px;color:var(--texto);"></p>
+</div>
+<div class="card" id="avisosPreview" style="display:none;">
+<div class="card-title">📣 Avisos recentes</div>
+<div id="avisosPreviewLista"></div>
+<div style="margin-top:10px;"><span style="color:var(--azul);cursor:pointer;font-size:13px;font-weight:600;" onclick="goToComunicacao()">Ver todos os avisos e o fórum →</span></div>
+</div>
+<div class="hero">
+<div class="hero-tag">🔭 Ensino de Física — ESG</div>
+<h1>Óptica Geométrica:<br/>A Ciência da Luz</h1>
+<p>Bem-vindo ao meu módulo interactivo de Óptica Geométrica. Preparei este material para ajudar o estudante a perceber melhor melhor a luz, usando exemplos simples do dia-a-dia, simulações e pequenas actividades. A ideia é aprender de forma mais prática, sem depender apenas de explicações teóricas.</p>
+<div class="hero-chips">
+<span class="chip">☀️ 6 Aulas</span>
+<span class="chip">🎮 Simuladores de raios</span>
+<span class="chip">🌍 Contexto </span>
+<span class="chip">🏆 Quiz por aula + avaliação final</span>
+<span class="chip">📐 Fórmulas interactivas</span>
+</div>
+</div>
+<div class="card">
+<div class="card-title">✨ Introdução para o estudante</div>
+<div class="conceito-list">
+<div class="ci"><div class="ci-icon">👋</div><div class="ci-body"><strong>Apresentação do módulo</strong><p>Este módulo foi pensado para tornar o estudo da Óptica Geométrica mais claro e interessante. Ao longo das aulas, o estudante vai observar situações conhecidas, responder perguntas, testar simulações e construir o conhecimento passo a passo.</p></div></div>
+<div class="ci"><div class="ci-icon">💡</div><div class="ci-body"><strong>Importância da Óptica Geométrica</strong><p>A Óptica Geométrica ajuda-nos a perceber fenómenos que vemos todos os dias, como a imagem no espelho, a colher que parece torta dentro da água, o funcionamento dos óculos, das lupas, das câmaras e dos retrovisores.</p></div></div>
+<div class="ci"><div class="ci-icon">🎮</div><div class="ci-body"><strong>Como o módulo deve ser usado</strong><p>O estudante deve explorar cada aula com atenção, mexer nos simuladores, tentar responder antes de ver as respostas e relacionar os conteúdos com situações reais. Assim, a aprendizagem torna-se mais activa e participativa.</p></div></div>
+<div class="ci"><div class="ci-icon">🎯</div><div class="ci-body"><strong>O que se espera do estudante</strong><p>Espera-se que o estudante participe com curiosidade, leia com calma, observe os exemplos e procure explicar os fenómenos com as suas próprias palavras. O mais importante não é decorar, mas perceber melhor.</p></div></div>
+<div class="ci"><div class="ci-icon">🚀</div><div class="ci-body"><strong>Percurso de aprendizagem</strong><p>No final do módulo, o estudante deverá conseguir explicar fenómenos como sombras, reflexão, refracção, formação de imagens em espelhos e funcionamento das lentes ópticas.</p></div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🗺️ As 6 Aulas do Módulo — Clica para explorar</div>
+<div class="topic-grid">
+<div class="topic-card" onclick="goTo(1)"><div class="topic-icon">💡</div><div class="topic-num">Aula 1</div><div class="topic-name">Propagação da Luz</div><div class="topic-desc">Raios, sombras e eclipses</div></div>
+<div class="topic-card" onclick="goTo(2)"><div class="topic-icon">🪞</div><div class="topic-num">Aula 2</div><div class="topic-name">Reflexão da Luz</div><div class="topic-desc">Leis e tipos de reflexão</div></div>
+<div class="topic-card" onclick="goTo(3)"><div class="topic-icon">🌊</div><div class="topic-num">Aula 3</div><div class="topic-name">Refracção da Luz</div><div class="topic-desc">Lei de Snell e desvios</div></div>
+<div class="topic-card" onclick="goTo(4)"><div class="topic-icon">🪞</div><div class="topic-num">Aula 4</div><div class="topic-name">Espelhos Planos</div><div class="topic-desc">Imagem virtual, direita e simétrica</div></div>
+<div class="topic-card" onclick="goTo(5)"><div class="topic-icon">🔮</div><div class="topic-num">Aula 5</div><div class="topic-name">Espelhos Esféricos</div><div class="topic-desc">Côncavos e convexos</div></div>
+<div class="topic-card" onclick="goTo(6)"><div class="topic-icon">🔍</div><div class="topic-num">Aula 6</div><div class="topic-name">Lentes Ópticas</div><div class="topic-desc">Convergentes e divergentes</div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🎯 Objectivos Gerais</div>
+<div class="conceito-list">
+<div class="ci"><div class="ci-icon">💡</div><div class="ci-body"><strong>Compreender a propagação rectilínea da luz</strong><p>Explicar a formação de sombras, penumbras e eclipses com base nos raios de luz.</p></div></div>
+<div class="ci"><div class="ci-icon">🪞</div><div class="ci-body"><strong>Aplicar as leis da reflexão e refracção</strong><p>Calcular ângulos e índices de refracção usando a Lei de Snell-Descartes.</p></div></div>
+<div class="ci"><div class="ci-icon">🔭</div><div class="ci-body"><strong>Analisar imagens formadas por espelhos planos, esféricos e lentes</strong><p>Determinar posição, tamanho e tipo de imagem usando a equação de Gauss.</p></div></div>
+<div class="ci"><div class="ci-icon">🌈</div><div class="ci-body"><strong>Relacionar óptica com o quotidiano </strong><p>Explicar arco-íris, miragems, óculos, câmaras e outros fenómenos locais.</p></div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">📊 Dashboard de Aprendizagem</div>
+<p style="color:var(--texto2);font-size:14px;line-height:1.7;">Este painel ajuda o aluno a acompanhar a sua evolução ao longo do módulo. Os pontos aumentam quando responde aos quizzes, conclui aulas e realiza a avaliação final.</p>
+<div class="dash-grid">
+<div class="dash-card"><div class="dash-label">Pontuação</div><div class="dash-value" id="dashXP">0 XP</div><div class="dash-sub">Ganha pontos ao responder correctamente.</div></div>
+<div class="dash-card"><div class="dash-label">Nível</div><div class="dash-value" id="dashLevel">1</div><div class="dash-sub" id="dashRank">Iniciante da Luz</div></div>
+<div class="dash-card"><div class="dash-label">Aulas concluídas</div><div class="dash-value" id="dashLessons">0/6</div><div class="dash-sub">Marca presença ao avançar no módulo.</div></div>
+<div class="dash-card"><div class="dash-label">Avaliação final</div><div class="dash-value" id="dashFinal">—</div><div class="dash-sub">Resultado aparece após o teste.</div></div>
+</div>
+<div class="xp-wrap"><div class="xp-fill" id="xpFill"></div></div>
+<div class="badge-row" id="badgeRow">
+<span class="medal" data-medal="50">🥉 Explorador da Luz</span>
+<span class="medal" data-medal="120">🥈 Mestre dos Espelhos</span>
+<span class="medal" data-medal="220">🥇 Especialista em Lentes</span>
+<span class="medal" data-medal="320">🏆 Físico Jovem</span>
+</div>
+</div>
+</div>
+<div class="lab-card">
+<div class="card-title">🔬 Modo Laboratório Virtual</div>
+<p style="color:var(--texto2);font-size:14px;line-height:1.7;">Em cada aula, usa o simulador como se fosse uma experiência: altera uma variável, observa o efeito e escreve uma conclusão curta. Isto transforma o módulo numa ferramenta de aprendizagem activa, não apenas numa página de leitura.</p>
+<div class="pathway" id="pathway">
+<div class="path-step" id="path1">💡<strong>Aula 1</strong>Sombras</div>
+<div class="path-step" id="path2">🪞<strong>Aula 2</strong>Reflexão</div>
+<div class="path-step" id="path3">🌊<strong>Aula 3</strong>Refracção</div>
+<div class="path-step" id="path4">🪞<strong>Aula 4</strong>Espelho plano</div>
+<div class="path-step" id="path5">🔮<strong>Aula 5</strong>Espelho esférico</div>
+<div class="path-step" id="path6">🔍<strong>Aula 6</strong>Lentes</div>
+</div>
+</div>
+<div class="nav-bot">
+<div></div>
+<button class="btn btn-luz" onclick="goTo(1)">Começar: Aula 1 →</button>
+</div>
+<div class="sec" id="sec1">
+<div class="sec-head">
+<div class="sec-icon">💡</div>
+<div class="sec-title"><h2>Propagação Rectilínea da Luz</h2><p>Aula 1 de 6</p></div>
+</div>
+<div class="activ"><div class="activ-tag">💬 Motivação e Activação</div><p>Num fim de tarde, um estudante caminha perto de um poste de luz e nota que a sua sombra muda de tamanho conforme se aproxima ou se afasta do poste.</p><p style="margin-top:10px;">• Porque a sombra aumenta ou diminui quando a posição do estudante muda?<br/>• Porque a sombra aparece do lado oposto à luz?<br/>• O que isto nos mostra sobre o caminho seguido pela luz?</p><p style="margin-top:12px;font-weight:600;color:var(--azul);">Nesta aula, vamos observar estas situações e perceber melhor como a luz se propaga e como se formam as sombras.</p></div>
+<div class="card">
+<div class="card-title">📖 Conceitos principais da aula</div>
+<div class="conceito-list">
+<div class="ci"><div class="ci-icon">✦</div><div class="ci-body"><strong>Luz e raio luminoso</strong><p>A luz é uma radiação electromagnética capaz de sensibilizar os nossos olhos. Em óptica geométrica, representamos o caminho da luz por linhas orientadas chamadas raios luminosos. O raio não é um objecto físico: é um modelo usado para estudar trajectórias, sombras e imagens.</p></div></div>
+<div class="ci"><div class="ci-icon">☀️</div><div class="ci-body"><strong>Fontes primárias e secundárias</strong><p>Fontes primárias emitem luz própria, como o Sol, uma lâmpada, uma chama ou o ecrã do telemóvel. Fontes secundárias não produzem luz: apenas reflectem a luz recebida, como a Lua, uma parede, um livro ou o rosto de uma pessoa iluminada.</p></div></div>
+<div class="ci"><div class="ci-icon">↗️</div><div class="ci-body"><strong>Meios ópticos</strong><p>Um meio transparente deixa a luz atravessar quase totalmente, como o ar limpo e o vidro. Um meio translúcido deixa passar parte da luz, mas espalha-a, como vidro fosco. Um meio opaco não permite a passagem da luz, como madeira, pedra ou metal.</p></div></div>
+<div class="ci"><div class="ci-icon">🌑</div><div class="ci-body"><strong>Propagação rectilínea</strong><p>Em meios homogéneos, transparentes e isotrópicos, a luz propaga-se em linha recta. Esta ideia explica por que as sombras têm contornos definidos quando a fonte é pequena e por que a imagem numa câmara escura aparece invertida.</p></div></div>
+<div class="ci"><div class="ci-icon">📌</div><div class="ci-body"><strong>Sombra, penumbra e eclipses</strong><p>A sombra é a região que não recebe luz directa. A penumbra é a região parcialmente iluminada, comum quando a fonte luminosa tem tamanho apreciável. Num eclipse solar, a Lua fica entre o Sol e a Terra; num eclipse lunar, a Terra fica entre o Sol e a Lua.</p></div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🎮 Simulador — Raios de Luz e Sombras</div>
+<div class="tip"><span class="tip-icon">💡</span>Arrasta o controlo abaixo para mudar o ângulo da fonte de luz e observa como a sombra muda.</div>
+<div class="sim-box" style="margin-top:12px;">
+<canvas height="320" id="c1"></canvas>
+<div class="sim-controls">
+<div class="ctrl-group">
+<div class="ctrl-label">Ângulo da fonte <span class="ctrl-val" id="c1-ang-v">45°</span></div>
+<input id="c1-ang" max="170" min="10" oninput="drawShadow()" type="range" value="45"/>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Tamanho do objecto <span class="ctrl-val" id="c1-sz-v">40px</span></div>
+<input id="c1-sz" max="80" min="10" oninput="drawShadow()" type="range" value="40"/>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Tipo de fonte</div>
+<select id="c1-type" onchange="drawShadow()" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;padding:6px 10px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;">
+<option value="point">Puntiforme (sombra)</option>
+<option value="ext">Extensa (penumbra)</option>
+</select>
+</div>
+</div>
+<div class="sim-legend">
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul);"></div>Raio de luz</div>
+<div class="leg-item"><div class="leg-dot" style="background:#222;border:1px solid #444;"></div>Sombra</div>
+<div class="leg-item"><div class="leg-dot" style="background:#1a1a2e;border:1px solid #333;"></div>Penumbra</div>
+</div>
+</div>
+</div>
+<div class="card lesson-quiz">
+<div class="card-title">📝 Verificação da aprendizagem — 5 questões</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 1 / 5</div>
+<div class="q-text">Em meio homogéneo e transparente, a luz propaga-se principalmente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Em linha recta</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Em espiral</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Em curvas aleatórias</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Apenas para baixo</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Em óptica geométrica, considera-se que a luz segue trajectória rectilínea em meio homogéneo.</div>
+<div class="q-fb err">❌ Revê este ponto: Em óptica geométrica, considera-se que a luz segue trajectória rectilínea em meio homogéneo.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 2 / 5</div>
+<div class="q-text">Qual é uma fonte primária de luz?</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">A</span>Lua</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Espelho</div>
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">C</span>Sol</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Livro</div>
+</div>
+<div class="q-fb ok">✅ Correcto! O Sol emite luz própria, por isso é fonte primária.</div>
+<div class="q-fb err">❌ Revê este ponto: O Sol emite luz própria, por isso é fonte primária.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 3 / 5</div>
+<div class="q-text">Um corpo opaco é aquele que:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">A</span>Deixa passar toda a luz</div>
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">B</span>Não deixa passar luz</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Apenas muda a cor da luz</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Produz luz própria</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Corpos opacos bloqueiam a passagem da luz.</div>
+<div class="q-fb err">❌ Revê este ponto: Corpos opacos bloqueiam a passagem da luz.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 4 / 5</div>
+<div class="q-text">A penumbra aparece com maior evidência quando a fonte luminosa é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Extensa</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Inexistente</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Sempre laser</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Pontual perfeita</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Fontes extensas produzem região parcialmente iluminada.</div>
+<div class="q-fb err">❌ Revê este ponto: Fontes extensas produzem região parcialmente iluminada.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 5 / 5</div>
+<div class="q-text">A câmara escura prova que:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">A</span>A luz só existe no Sol</div>
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">B</span>A luz pode formar imagem invertida ao passar por pequeno orifício</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Todos os corpos produzem luz</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>A sombra não depende da luz</div>
+</div>
+<div class="q-fb ok">✅ Correcto! O pequeno orifício selecciona raios rectilíneos e forma imagem invertida.</div>
+<div class="q-fb err">❌ Revê este ponto: O pequeno orifício selecciona raios rectilíneos e forma imagem invertida.</div>
+</div>
+</div>
+<div class="lab-card">
+<div class="card-title">🧪 Actividade prática da Aula 1</div>
+<div class="study-tip"><strong>Objectivo:</strong> Relacionar o tipo de fonte luminosa e o tamanho do objecto com a formação de sombra e penumbra.</div>
+<div style="font-size:13px;color:var(--texto2);line-height:1.8;margin:10px 0;">No simulador, alterna entre fonte <strong>Puntiforme</strong> e <strong>Extensa</strong>, e varia o tamanho do objecto e o ângulo da fonte. Observa em que situações surge penumbra e como o comprimento da sombra muda.</div>
+<div class="study-tip">💭 <strong>Conclusões:</strong> Em quais das situações que testaste apareceu penumbra e em quais não apareceu? Que relação encontras entre o tipo de fonte (puntiforme ou extensa) e o aparecimento da penumbra?</div>
+<button class="btn btn-ghost" onclick="completeLesson(1)">✓ Confirmar aula 1 como concluída</button>
+</div>
+<div class="nav-bot">
+<button class="btn btn-ghost" onclick="goTo(0)">← Anterior</button>
+<button class="btn btn-luz" onclick="goTo(2)">Aula 2: Reflexão →</button>
+</div>
+</div><div class="sec" id="sec2">
+<div class="sec-head">
+<div class="sec-icon" style="background: var(--azul);">🪞</div>
+<div class="sec-title"><h2>Reflexão da Luz</h2><p>Aula 2 de 6</p></div>
+</div>
+<div class="activ"><div class="activ-tag">💬 Motivação e Activação</div><p>Ao preparar-se para sair de casa, um estudante olha para o espelho e vê o seu rosto com nitidez. Depois olha para uma parede iluminada e percebe que a parede recebe luz, mas não forma imagem.</p><p style="margin-top:10px;">• Porque o espelho mostra uma imagem clara e a parede não?<br/>• O que acontece com a luz quando chega a uma superfície lisa?<br/>• Será que todas as superfícies reflectem a luz da mesma maneira?</p><p style="margin-top:12px;font-weight:600;color:var(--azul);">Nesta aula, vamos investigar estas situações e perceber melhor como acontece a reflexão da luz.</p></div>
+<div class="card">
+<div class="card-title">📐 Leis da Reflexão</div>
+<div class="formula-wrap">
+<div class="formula">θᵢ = θᵣ</div>
+<div style="color:var(--texto2);font-size:13px;">O ângulo de incidência é igual ao ângulo de reflexão</div>
+<div class="formula-chips">
+<span class="fchip">θᵢ = ângulo de incidência</span>
+<span class="fchip">θᵣ = ângulo de reflexão</span>
+<span class="fchip">ambos medidos em relação à normal</span>
+</div>
+</div>
+<div class="conceito-list" style="margin-top:16px;">
+<div class="ci"><div class="ci-icon">1️⃣</div><div class="ci-body"><strong>1ª Lei</strong><p>O raio incidente, a normal e o raio reflectido estão no mesmo plano.</p></div></div>
+<div class="ci"><div class="ci-icon">2️⃣</div><div class="ci-body"><strong>2ª Lei</strong><p>O ângulo de incidência é igual ao ângulo de reflexão (medidos em relação à normal).</p></div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🎮 Simulador de Reflexão — Arrasta o ângulo</div>
+<div class="tip"><span class="tip-icon">💡</span>Usa o slider para mudar o ângulo do raio incidente e observa o raio reflectido em tempo real.</div>
+<div class="sim-box" style="margin-top:12px;">
+<canvas height="340" id="c2"></canvas>
+<div class="sim-controls">
+<div class="ctrl-group">
+<div class="ctrl-label">Ângulo de incidência <span class="ctrl-val" id="c2-ang-v">45°</span></div>
+<input id="c2-ang" max="85" min="5" oninput="drawReflexao()" type="range" value="45"/>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Tipo de superfície</div>
+<select id="c2-type" onchange="drawReflexao()" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;padding:6px 10px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;">
+<option value="regular">Regular (espelho polido)</option>
+<option value="difusa">Difusa (papel, parede)</option>
+</select>
+</div>
+<div style="display:flex;flex-direction:column;justify-content:center;">
+<div style="font-size:12px;color:var(--texto2);">θᵢ = θᵣ =</div>
+<div id="c2-result" style="font-family:'Courier New',monospace;font-size:22px;color:var(--azul);font-weight:700;">45°</div>
+</div>
+</div>
+<div class="sim-legend">
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul);"></div>Raio incidente</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul3);"></div>Raio reflectido</div>
+<div class="leg-item"><div class="leg-dot" style="background:#555;border:1px dashed #777;"></div>Normal</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🪞 Tipos de Reflexão</div>
+<div class="tabs">
+<div class="tab active" onclick="switchTab('ref',0,this)">Regular</div>
+<div class="tab" onclick="switchTab('ref',1,this)">Difusa</div>
+</div>
+<div class="tab-content active" id="ref0">
+<div class="ci"><div class="ci-icon">✨</div><div class="ci-body"><strong>Reflexão Regular (especular)</strong><p>Ocorre em superfícies muito lisas e polidas. Os raios reflectidos são paralelos entre si — formam imagem nítida. Exemplos: espelho, superfície calma do lago Niassa, vidro.</p></div></div>
+</div>
+<div class="tab-content" id="ref1">
+<div class="ci"><div class="ci-icon">📄</div><div class="ci-body"><strong>Reflexão Difusa</strong><p>Ocorre em superfícies rugosas. Os raios reflectem em todas as direcções — não forma imagem definida. Exemplos: papel, parede pintada, roupa. É por isso que conseguimos ler este módulo!</p></div></div>
+</div>
+</div>
+<div class="lab-card">
+<div class="card-title">🧪 Actividade prática da Aula 2</div>
+<div class="study-tip"><strong>Objectivo:</strong> Verificar experimentalmente a lei da reflexão (θᵢ = θᵣ) e comparar reflexão regular com reflexão difusa.</div>
+<div style="font-size:13px;color:var(--texto2);line-height:1.8;margin:10px 0;">
+<strong>Passo 1.</strong> Com a superfície em <strong>Regular (espelho polido)</strong>, ajusta o ângulo de incidência para 20°, depois 45° e depois 70°.<br/>
+<strong>Passo 2.</strong> Para cada valor, lê o ângulo de reflexão mostrado no painel (θᵢ = θᵣ) e regista na tabela abaixo.<br/>
+<strong>Passo 3.</strong> Muda para <strong>Difusa (papel, parede)</strong> e repete os mesmos três ângulos. Observa a diferença no comportamento dos raios.
+</div>
+<div style="overflow-x:auto;margin:12px 0;">
+<table class="tbl">
+<thead><tr><th>Ângulo incidência (θᵢ)</th><th>Superfície</th><th>Ângulo reflexão (θᵣ)</th><th>θᵢ = θᵣ?</th></tr></thead>
+<tbody>
+<tr><td>20°</td><td>Regular</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>45°</td><td>Regular</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>70°</td><td>Regular</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>20°</td><td>Difusa</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>45°</td><td>Difusa</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>70°</td><td>Difusa</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+</tbody>
+</table>
+</div>
+<div class="study-tip">💭 <strong>Conclusões:</strong> Observa os valores de θᵢ e θᵣ que registaste na tabela. Que relação existe entre estes dois ângulos? Com base no que observaste no simulador, porque achas que apenas a superfície regular forma uma imagem nítida e a difusa não?</div>
+</div>
+<div class="card lesson-quiz">
+<div class="card-title">📝 Verificação da aprendizagem — 5 questões</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 1 / 5</div>
+<div class="q-text">Na reflexão, os ângulos devem ser medidos em relação:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>À normal</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>À horizontal da folha</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>À cor do espelho</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Ao tamanho do objecto</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Os ângulos de incidência e reflexão são medidos a partir da normal.</div>
+<div class="q-fb err">❌ Revê este ponto: Os ângulos de incidência e reflexão são medidos a partir da normal.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 2 / 5</div>
+<div class="q-text">Se o ângulo de incidência é 30°, o ângulo de reflexão é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">A</span>15°</div>
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">B</span>30°</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>60°</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>90°</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Pela segunda lei da reflexão, θi = θr.</div>
+<div class="q-fb err">❌ Revê este ponto: Pela segunda lei da reflexão, θi = θr.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 3 / 5</div>
+<div class="q-text">A reflexão regular ocorre principalmente em:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">A</span>Papel rugoso</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Parede áspera</div>
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">C</span>Espelho polido</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Solo de areia</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Superfícies lisas e polidas produzem reflexão regular.</div>
+<div class="q-fb err">❌ Revê este ponto: Superfícies lisas e polidas produzem reflexão regular.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 4 / 5</div>
+<div class="q-text">A reflexão difusa é importante porque:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">A</span>Impede a visão</div>
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">B</span>Permite ver objectos de várias posições</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Só acontece no vácuo</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Transforma luz em som</div>
+</div>
+<div class="q-fb ok">✅ Correcto! A luz espalhada chega aos olhos de observadores em diferentes posições.</div>
+<div class="q-fb err">❌ Revê este ponto: A luz espalhada chega aos olhos de observadores em diferentes posições.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 5 / 5</div>
+<div class="q-text">Na primeira lei da reflexão, estão no mesmo plano:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Raio incidente, normal e raio reflectido</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Objecto, lente e retina</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Sol, Lua e Terra</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Foco, centro e vértice apenas</div>
+</div>
+<div class="q-fb ok">✅ Correcto! A primeira lei organiza geometricamente o fenómeno da reflexão.</div>
+<div class="q-fb err">❌ Revê este ponto: A primeira lei organiza geometricamente o fenómeno da reflexão.</div>
+</div>
+</div>
+<div style="text-align:left;margin-top:24px;"><button class="btn btn-ghost" onclick="completeLesson(2)">✓ Confirmar aula 2 como concluída</button></div>
+<div class="nav-bot">
+<button class="btn btn-ghost" onclick="goTo(1)">← Anterior</button>
+<button class="btn btn-luz" onclick="goTo(3)">Aula 3: Refracção →</button>
+</div>
+</div><div class="sec" id="sec3">
+<div class="sec-head">
+<div class="sec-icon" style="background: var(--azul);">🌊</div>
+<div class="sec-title"><h2>Refracção da Luz</h2><p>Aula 3 de 6</p></div>
+</div>
+<div class="activ"><div class="activ-tag">💬 Motivação e Activação</div><p>Um estudante coloca uma colher dentro de um copo com água e, ao olhar de lado, percebe que a colher parece torta ou partida.</p><p style="margin-top:10px;">• Porque a colher parece mudar de forma dentro da água?<br/>• O que poderá acontecer à luz quando passa do ar para a água?<br/>• Será que a luz segue sempre o mesmo caminho em materiais diferentes?</p><p style="margin-top:12px;font-weight:600;color:var(--azul);">Nesta aula, vamos investigar este fenómeno e perceber melhor como ocorre a refracção da luz.</p></div>
+<div class="card">
+<div class="card-title">📐 Lei de Snell-Descartes</div>
+<div class="formula-wrap">
+<div class="formula">n₁ · sin(θ₁) = n₂ · sin(θ₂)</div>
+<div class="formula-chips">
+<span class="fchip">n₁ = índice meio 1</span>
+<span class="fchip">n₂ = índice meio 2</span>
+<span class="fchip">θ₁ = ângulo de incidência</span>
+<span class="fchip">θ₂ = ângulo de refracção</span>
+</div>
+</div>
+<div class="info-grid" style="margin-top:16px;">
+<div class="info-item"><div class="ii-icon">💨</div><div class="ii-title">Ar</div><div class="ii-desc">n = 1,0003 ≈ 1<br/>Velocidade: 3×10⁸ m/s</div></div>
+<div class="info-item"><div class="ii-icon">💧</div><div class="ii-title">Água</div><div class="ii-desc">n = 1,33<br/>Velocidade: 2,26×10⁸ m/s</div></div>
+<div class="info-item"><div class="ii-icon">🔷</div><div class="ii-title">Vidro</div><div class="ii-desc">n = 1,5<br/>Velocidade: 2×10⁸ m/s</div></div>
+<div class="info-item"><div class="ii-icon">💎</div><div class="ii-title">Diamante</div><div class="ii-desc">n = 2,42<br/>Velocidade: 1,24×10⁸ m/s</div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🎮 Simulador de Refracção — Lei de Snell</div>
+<div class="tip"><span class="tip-icon">💡</span>Altera o ângulo e os meios para ver como a luz se desvia. Observa o ângulo de refracção calculado automaticamente.</div>
+<div class="sim-box" style="margin-top:12px;">
+<canvas height="360" id="c3"></canvas>
+<div class="sim-controls">
+<div class="ctrl-group">
+<div class="ctrl-label">Ângulo de incidência <span class="ctrl-val" id="c3-ang-v">45°</span></div>
+<input id="c3-ang" max="89" min="1" oninput="drawRefracao()" type="range" value="45"/>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Meio 1 (superior)</div>
+<select id="c3-n1" onchange="drawRefracao()" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;padding:6px 10px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;">
+<option value="1">Ar (n=1,00)</option>
+<option value="1.33">Água (n=1,33)</option>
+<option value="1.5">Vidro (n=1,50)</option>
+</select>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Meio 2 (inferior)</div>
+<select id="c3-n2" onchange="drawRefracao()" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;padding:6px 10px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;">
+<option selected="" value="1.33">Água (n=1,33)</option>
+<option value="1.5">Vidro (n=1,50)</option>
+<option value="2.42">Diamante (n=2,42)</option>
+<option value="1">Ar (n=1,00)</option>
+</select>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;justify-content:center;">
+<div style="font-size:11px;color:var(--texto2);">θ₂ (refracção) =</div>
+<div id="c3-result" style="font-family:'Courier New',monospace;font-size:22px;color:var(--azul3);font-weight:700;">32.1°</div>
+<div id="c3-tir" style="font-size:11px;color:var(--vermelho);display:none;">⚠ Reflexão Total Interna!</div>
+</div>
+</div>
+<div class="sim-legend">
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul);"></div>Raio incidente</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul3);"></div>Raio refractado</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--vermelho);"></div>Raio reflectido</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🔁 Reflexão Total Interna</div>
+<div class="ci"><div class="ci-icon">🌟</div><div class="ci-body"><strong>Quando ocorre?</strong><p>Quando a luz passa dum meio mais denso para menos denso (ex: água → ar) e o ângulo de incidência é maior que o <em>ângulo crítico</em>. A luz é totalmente reflectida — não sai para o outro meio.</p><span class="code">sin(θc) = n₂/n₁</span></div></div>
+<div class="ci" style="margin-top:12px;"><div class="ci-icon">💎</div><div class="ci-body"><strong>Aplicações</strong><p>Fibra óptica (telecomunicações), brilho do diamante, endoscopia médica e o fenómeno da miragem no asfalto em dias quentes.</p></div></div>
+</div>
+<div class="lab-card">
+<div class="card-title">🧪 Actividade prática da Aula 3</div>
+<div class="study-tip"><strong>Objectivo:</strong> Analisar como o índice de refracção dos dois meios afecta o ângulo de refracção e identificar a reflexão total interna.</div>
+<div style="font-size:13px;color:var(--texto2);line-height:1.8;margin:10px 0;">
+<strong>Passo 1.</strong> Define Meio 1 = Ar (n=1,00) e Meio 2 = Água (n=1,33). Com ângulo de incidência 45°, regista θ₂.<br/>
+<strong>Passo 2.</strong> Muda o Meio 2 para Vidro (n=1,50) e depois para Diamante (n=2,42), mantendo o mesmo ângulo de incidência. Regista θ₂ em cada caso.<br/>
+<strong>Passo 3.</strong> Agora inverte: Meio 1 = Água (n=1,33), Meio 2 = Ar (n=1,00). Aumenta lentamente o ângulo de incidência até aparecer o aviso "Reflexão Total Interna". Regista esse ângulo (ângulo crítico).
+</div>
+<div style="overflow-x:auto;margin:12px 0;">
+<table class="tbl">
+<thead><tr><th>Meio 1</th><th>Meio 2</th><th>θ₁ (incidência)</th><th>θ₂ (refracção)</th></tr></thead>
+<tbody>
+<tr><td>Ar</td><td>Água</td><td>45°</td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Ar</td><td>Vidro</td><td>45°</td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Ar</td><td>Diamante</td><td>45°</td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Água</td><td>Ar</td><td>ângulo crítico</td><td>90°</td></tr>
+</tbody>
+</table>
+</div>
+<div class="study-tip">💭 <strong>Conclusões:</strong> Observa os valores de θ₂ que registaste para os diferentes meios. O que acontece ao ângulo de refracção à medida que o segundo meio se torna mais refringente? Com base no que observaste no Passo 3, em que sentido (de que meio para que meio) ocorreu a reflexão total interna?</div>
+</div>
+<div class="card lesson-quiz">
+<div class="card-title">📝 Verificação da aprendizagem — 5 questões</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 1 / 5</div>
+<div class="q-text">A refracção acontece quando a luz:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Muda de meio e pode mudar de direcção</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Desaparece completamente</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Só reflecte no espelho</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>É sempre absorvida</div>
+</div>
+<div class="q-fb ok">✅ Correcto! A refracção envolve mudança de meio e alteração da velocidade da luz.</div>
+<div class="q-fb err">❌ Revê este ponto: A refracção envolve mudança de meio e alteração da velocidade da luz.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 2 / 5</div>
+<div class="q-text">Ao passar do ar para o vidro, a luz geralmente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Aproxima-se da normal</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Afasta-se sempre da normal</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Não muda velocidade</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Transforma-se em calor totalmente</div>
+</div>
+<div class="q-fb ok">✅ Correcto! O vidro é mais refringente que o ar; o raio aproxima-se da normal.</div>
+<div class="q-fb err">❌ Revê este ponto: O vidro é mais refringente que o ar; o raio aproxima-se da normal.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 3 / 5</div>
+<div class="q-text">O índice de refracção está relacionado com:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>A velocidade da luz no meio</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>A massa do espelho</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>O som produzido</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>A temperatura corporal</div>
+</div>
+<div class="q-fb ok">✅ Correcto! O índice indica quanto a luz desacelera no meio.</div>
+<div class="q-fb err">❌ Revê este ponto: O índice indica quanto a luz desacelera no meio.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 4 / 5</div>
+<div class="q-text">A colher parece quebrada na água por causa da:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Refracção</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Evaporação</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Magnetização</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Combustão</div>
+</div>
+<div class="q-fb ok">✅ Correcto! A mudança de meio desvia os raios e cria aparência de quebra.</div>
+<div class="q-fb err">❌ Revê este ponto: A mudança de meio desvia os raios e cria aparência de quebra.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 5 / 5<span class="q-tag-open">Aberta</span></div>
+<div class="q-text">Explica em que condições ocorre a reflexão total interna e porque não acontece no sentido inverso (de um meio menos refringente para um mais refringente).</div>
+<textarea class="q-open-input" placeholder="Escreve a tua resposta aqui..." rows="3" onblur="markOpenDone(this)"></textarea>
+</div>
+</div>
+<div style="text-align:left;margin-top:24px;"><button class="btn btn-ghost" onclick="completeLesson(3)">✓ Confirmar aula 3 como concluída</button></div>
+<div class="nav-bot">
+<button class="btn btn-ghost" onclick="goTo(2)">← Anterior</button>
+<button class="btn btn-luz" onclick="goTo(4)">Aula 4: Espelhos Planos →</button>
+</div>
+</div><div class="sec" id="sec4">
+<div class="sec-head">
+<div class="sec-icon" style="background: var(--azul);">🪞</div>
+<div class="sec-title"><h2>Espelhos Planos</h2><p>Aula 4 de 6</p></div>
+</div>
+<div class="activ"><div class="activ-tag">💬 Motivação e Activação</div><p>Um estudante escreve o seu nome numa folha e coloca-a em frente a um espelho. Ao observar a imagem, nota que as letras aparecem ao contrário.</p><p style="margin-top:10px;">• Porque as letras aparecem invertidas no espelho?<br/>• A imagem parece estar onde exactamente?<br/>• O que muda quando o objecto se aproxima ou se afasta do espelho?</p><p style="margin-top:12px;font-weight:600;color:var(--azul);">Nesta aula, vamos analisar esta situação e perceber melhor como se formam as imagens nos espelhos planos.</p></div>
+<div class="card">
+<div class="card-title">📖 Características da Imagem no Espelho Plano</div>
+<div class="conceito-list">
+<div class="ci"><div class="ci-icon">👤</div><div class="ci-body"><strong>Imagem virtual</strong><p>A imagem parece formar-se atrás do espelho, mas não pode ser projectada num ecrã.</p></div></div>
+<div class="ci"><div class="ci-icon">↔️</div><div class="ci-body"><strong>Imagem simétrica</strong><p>A distância do objecto ao espelho é igual à distância da imagem ao espelho.</p><span class="code">d(objecto) = d(imagem)</span></div></div>
+<div class="ci"><div class="ci-icon">📏</div><div class="ci-body"><strong>Mesmo tamanho e direita</strong><p>A imagem tem o mesmo tamanho do objecto e não fica de cabeça para baixo.</p></div></div>
+<div class="ci"><div class="ci-icon">🔄</div><div class="ci-body"><strong>Inversão lateral</strong><p>O lado direito e esquerdo parecem trocados. É por isso que letras vistas no espelho ficam invertidas lateralmente.</p></div></div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">📋 Resumo</div>
+<div style="overflow-x:auto;">
+<table class="tbl">
+<thead><tr><th>Propriedade</th><th>Espelho plano</th></tr></thead>
+<tbody>
+<tr><td>Tipo de imagem</td><td>Virtual</td></tr>
+<tr><td>Orientação</td><td>Direita, com inversão lateral</td></tr>
+<tr><td>Tamanho</td><td>Igual ao objecto</td></tr>
+<tr><td>Distância</td><td>Imagem e objecto ficam à mesma distância do espelho</td></tr>
+<tr><td>Exemplos</td><td>Espelho de casa, salão, lojas e laboratórios escolares</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="lab-card">
+</div>
+<div class="card lesson-quiz">
+<div class="card-title">📝 Verificação da aprendizagem — 5 questões</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 1 / 5</div>
+<div class="q-text">A imagem no espelho plano é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">A</span>Real e invertida</div>
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">B</span>Virtual, direita e do mesmo tamanho</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Real e maior</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Sempre menor</div>
+</div>
+<div class="q-fb ok">✅ Correcto! A imagem de espelho plano é virtual, direita e igual ao objecto.</div>
+<div class="q-fb err">❌ Revê este ponto: A imagem de espelho plano é virtual, direita e igual ao objecto.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 2 / 5</div>
+<div class="q-text">Se o objecto está a 2 m do espelho plano, a imagem fica:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>2 m atrás do espelho</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>4 m à frente do espelho</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>No próprio espelho</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>A 1 cm do espelho</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Objecto e imagem ficam a distâncias iguais do espelho.</div>
+<div class="q-fb err">❌ Revê este ponto: Objecto e imagem ficam a distâncias iguais do espelho.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 3 / 5</div>
+<div class="q-text">A imagem é chamada virtual porque:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Não é formada pelo cruzamento real dos raios</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Não pode ser vista</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>É sempre pequena</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Só aparece no escuro</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Os prolongamentos dos raios parecem vir de trás do espelho.</div>
+<div class="q-fb err">❌ Revê este ponto: Os prolongamentos dos raios parecem vir de trás do espelho.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 4 / 5</div>
+<div class="q-text">O espelho plano produz principalmente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Reflexão regular</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Refracção total</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Dispersão sonora</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Absorção completa</div>
+</div>
+<div class="q-fb ok">✅ Correcto! A superfície polida reflecte ordenadamente os raios.</div>
+<div class="q-fb err">❌ Revê este ponto: A superfície polida reflecte ordenadamente os raios.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 5 / 5<span class="q-tag-open">Aberta</span></div>
+<div class="q-text">Explica porque a inversão lateral que vês num espelho plano está ligada à simetria da imagem, e não a uma troca real de esquerda e direita.</div>
+<textarea class="q-open-input" placeholder="Escreve a tua resposta aqui..." rows="3" onblur="markOpenDone(this)"></textarea>
+</div>
+</div>
+<div style="text-align:left;margin-top:24px;"><button class="btn btn-ghost" onclick="completeLesson(4)">✓ Confirmar aula 4 como concluída</button></div>
+<div class="nav-bot">
+<button class="btn btn-ghost" onclick="goTo(3)">← Anterior</button>
+<button class="btn btn-luz" onclick="goTo(5)">Aula 5: Espelhos Esféricos →</button>
+</div>
+</div><div class="sec" id="sec5">
+<div class="sec-head">
+<div class="sec-icon" style="background: var(--azul);">🔮</div>
+<div class="sec-title"><h2>Espelhos Esféricos</h2><p>Aula 5 de 6</p></div>
+</div>
+<div class="activ"><div class="activ-tag">💬 Motivação e Activação</div><p>Numa loja, um estudante observa um espelho colocado no canto e percebe que consegue ver uma grande parte do espaço. Mais tarde, usa um espelho que aumenta a imagem do rosto.</p><p style="margin-top:10px;">• Porque estes espelhos mostram imagens diferentes?<br/>• O que pode fazer uma imagem parecer maior ou menor?<br/>• Será que a forma do espelho influencia a imagem que vemos?</p><p style="margin-top:12px;font-weight:600;color:var(--azul);">Nesta aula, vamos investigar estas situações e perceber melhor o funcionamento dos espelhos esféricos.</p></div>
+<div class="card">
+<div class="card-title">📐 Equação dos Espelhos — Gauss</div>
+<div class="formula-wrap">
+<div class="formula">1/f = 1/p + 1/p'</div>
+<div class="formula-chips">
+<span class="fchip">f = distância focal</span>
+<span class="fchip">p = distância do objecto</span>
+<span class="fchip">p' = distância da imagem</span>
+</div>
+</div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
+<div class="formula-wrap" style="margin:0;">
+<div class="formula" style="font-size:22px;">M = -p'/p</div>
+<div style="font-size:12px;color:var(--texto2);">Ampliação linear</div>
+</div>
+<div class="formula-wrap" style="margin:0;border-color:var(--azul2);">
+<div class="formula" style="font-size:22px;color:var(--azul2);">f = R/2</div>
+<div style="font-size:12px;color:var(--texto2);">Relação focal-raio</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🎮 Simulador de Espelhos Esféricos</div>
+<div class="tip"><span class="tip-icon">💡</span>Altera o tipo de espelho, a distância focal e a posição do objecto para ver onde se forma a imagem.</div>
+<div class="sim-box" style="margin-top:12px;">
+<canvas height="380" id="c4"></canvas>
+<div class="sim-controls">
+<div class="ctrl-group">
+<div class="ctrl-label">Tipo de espelho</div>
+<select id="c4-type" onchange="drawEspelho()" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;padding:6px 10px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;">
+<option value="concavo">Côncavo</option>
+<option value="convexo">Convexo</option>
+</select>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Distância focal f <span class="ctrl-val" id="c4-f-v">80px</span></div>
+<input id="c4-f" max="120" min="40" oninput="drawEspelho()" type="range" value="80"/>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Posição do objecto p <span class="ctrl-val" id="c4-p-v">160px</span></div>
+<input id="c4-p" max="300" min="20" oninput="drawEspelho()" type="range" value="160"/>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;justify-content:center;min-width:130px;">
+<div id="c4-info" style="font-size:12px;color:var(--texto2);line-height:1.8;font-family:'Courier New',monospace;"></div>
+</div>
+</div>
+<div class="sim-legend">
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul);"></div>Objecto</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--verde);"></div>Imagem real</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--vermelho);"></div>Imagem virtual</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul3);"></div>Raios principais</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">📋 Comparação dos Espelhos</div>
+<div style="overflow-x:auto;">
+<table class="tbl">
+<thead><tr><th>Tipo</th><th>Foco</th><th>Imagens possíveis</th><th>Uso</th></tr></thead>
+<tbody>
+<tr><td>Plano</td><td>—</td><td>Virtual, direita, mesmo tamanho</td><td>Espelho de banho, salões de beleza</td></tr>
+<tr><td>Côncavo</td><td>Real</td><td>Real/virtual, ampliada/reduzida</td><td>Espelho de maquilhagem, faróis de carro</td></tr>
+<tr><td>Convexo</td><td>Virtual</td><td>Virtual, direita, reduzida</td><td>Retrovisor de chapa, câmaras de vigilância</td></tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="lab-card">
+<div class="card-title">🧪 Actividade prática da Aula 5</div>
+<div class="study-tip"><strong>Objectivo:</strong> Investigar como o tipo de espelho, a distância focal e a posição do objecto determinam o tipo, o tamanho e a orientação da imagem.</div>
+<div style="font-size:13px;color:var(--texto2);line-height:1.8;margin:10px 0;">
+<strong>Passo 1.</strong> Com espelho <strong>Côncavo</strong> e f=80px, coloca o objecto bem além do centro (p=300px). Regista p', o tipo e a orientação da imagem.<br/>
+<strong>Passo 2.</strong> Aproxima lentamente o objecto até p=160px (entre C e F) e depois até p=40px (entre F e o espelho). Regista o que muda em cada posição.<br/>
+<strong>Passo 3.</strong> Muda para espelho <strong>Convexo</strong> e repete com p=160px e p=300px. Confirma que a imagem se mantém sempre virtual, direita e reduzida.
+</div>
+<div style="overflow-x:auto;margin:12px 0;">
+<table class="tbl">
+<thead><tr><th>Tipo</th><th>p (objecto)</th><th>p' (imagem)</th><th>Real/Virtual</th><th>Orientação</th></tr></thead>
+<tbody>
+<tr><td>Côncavo</td><td>300px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Côncavo</td><td>160px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Côncavo</td><td>40px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Convexo</td><td>160px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Convexo</td><td>300px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+</tbody>
+</table>
+</div>
+<div class="study-tip">💭 <strong>Conclusões:</strong> Observa os dados que registaste na tabela. Em quais posições do objecto o espelho côncavo formou imagem real, e em quais formou imagem virtual? E o espelho convexo, que tipo de imagem formou em todas as posições que testaste? Que diferença notas entre os dois espelhos?</div>
+</div>
+<div class="card lesson-quiz">
+<div class="card-title">📝 Verificação da aprendizagem — 5 questões</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 1 / 5</div>
+<div class="q-text">O espelho côncavo é considerado:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Convergente</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Divergente sempre</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Plano</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Opaco</div>
+</div>
+<div class="q-fb ok">✅ Correcto! O côncavo converge raios paralelos para o foco.</div>
+<div class="q-fb err">❌ Revê este ponto: O côncavo converge raios paralelos para o foco.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 2 / 5</div>
+<div class="q-text">O espelho convexo forma imagem:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Virtual, direita e reduzida</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Real e invertida sempre</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Maior e projectável</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Sem foco</div>
+</div>
+<div class="q-fb ok">✅ Correcto! O convexo forma sempre imagem virtual, direita e menor.</div>
+<div class="q-fb err">❌ Revê este ponto: O convexo forma sempre imagem virtual, direita e menor.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 3 / 5</div>
+<div class="q-text">A relação entre foco e raio de curvatura é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>f = R/2</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>f = 2R</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>R = f/4</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>f = R²</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Nos espelhos esféricos, f corresponde a metade do raio de curvatura.</div>
+<div class="q-fb err">❌ Revê este ponto: Nos espelhos esféricos, f corresponde a metade do raio de curvatura.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 4 / 5</div>
+<div class="q-text">Espelhos convexos são usados em retrovisores porque:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Aumentam o campo visual</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Aumentam sempre o tamanho real</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Eliminam a reflexão</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Funcionam como lentes</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Eles mostram uma região maior do ambiente.</div>
+<div class="q-fb err">❌ Revê este ponto: Eles mostram uma região maior do ambiente.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 5 / 5<span class="q-tag-open">Aberta</span></div>
+<div class="q-text">Explica em que posição do objecto um espelho côncavo forma imagem virtual e ampliada, e porque isso não acontece num espelho convexo.</div>
+<textarea class="q-open-input" placeholder="Escreve a tua resposta aqui..." rows="3" onblur="markOpenDone(this)"></textarea>
+</div>
+</div>
+<div style="text-align:left;margin-top:24px;"><button class="btn btn-ghost" onclick="completeLesson(5)">✓ Confirmar aula 5 como concluída</button></div>
+<div class="nav-bot">
+<button class="btn btn-ghost" onclick="goTo(4)">← Anterior</button>
+<button class="btn btn-luz" onclick="goTo(6)">Aula 6: Lentes Ópticas →</button>
+</div>
+</div><div class="sec" id="sec6">
+<div class="sec-head">
+<div class="sec-icon" style="background: var(--azul);">🔍</div>
+<div class="sec-title"><h2>Lentes Ópticas</h2><p>Aula 6 de 6</p></div>
+</div>
+<div class="activ"><div class="activ-tag">💬 Motivação e Activação</div><p>Um estudante usa uma lupa para observar letras pequenas de um livro e percebe que elas ficam maiores e mais fáceis de ler.</p><p style="margin-top:10px;">• Porque as letras parecem maiores quando usamos a lupa?<br/>• Todas as lentes produzem o mesmo efeito?<br/>• Como as lentes conseguem alterar a imagem observada?</p><p style="margin-top:12px;font-weight:600;color:var(--azul);">Nesta aula, vamos investigar estas situações e perceber melhor o funcionamento das lentes ópticas.</p></div>
+<div class="card">
+<div class="card-title">📐 Equação de Gauss para Lentes</div>
+<div class="formula-wrap">
+<div class="formula">1/f = 1/p + 1/p'</div>
+<div class="formula-chips">
+<span class="fchip">f &gt; 0 → convergente</span>
+<span class="fchip">f &lt; 0 → divergente</span>
+<span class="fchip">P = 1/f (dioptrias)</span>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">🎮 Simulador de Lentes — Formação de Imagem</div>
+<div class="tip"><span class="tip-icon">💡</span>Experimenta lentes convergentes e divergentes. Observa onde e como se forma a imagem.</div>
+<div class="sim-box" style="margin-top:12px;">
+<canvas height="380" id="c5"></canvas>
+<div class="sim-controls">
+<div class="ctrl-group">
+<div class="ctrl-label">Tipo de lente</div>
+<select id="c5-type" onchange="drawLente()" style="background:#f1f5f9;border:1px solid #cbd5e1;color:#0f172a;padding:6px 10px;border-radius:6px;font-family:Arial,Helvetica,sans-serif;">
+<option value="conv">Convergente (biconvexa)</option>
+<option value="div">Divergente (bicôncava)</option>
+</select>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Distância focal |f| <span class="ctrl-val" id="c5-f-v">90px</span></div>
+<input id="c5-f" max="130" min="40" oninput="drawLente()" type="range" value="90"/>
+</div>
+<div class="ctrl-group">
+<div class="ctrl-label">Posição objecto p <span class="ctrl-val" id="c5-p-v">180px</span></div>
+<input id="c5-p" max="320" min="20" oninput="drawLente()" type="range" value="180"/>
+</div>
+<div style="display:flex;flex-direction:column;gap:4px;justify-content:center;min-width:130px;">
+<div id="c5-info" style="font-size:12px;color:var(--texto2);line-height:1.8;font-family:'Courier New',monospace;"></div>
+</div>
+</div>
+<div class="sim-legend">
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul);"></div>Objecto</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--verde);"></div>Imagem real</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--vermelho);"></div>Imagem virtual</div>
+<div class="leg-item"><div class="leg-dot" style="background:var(--azul3);"></div>Raios</div>
+</div>
+</div>
+</div>
+<div class="card">
+<div class="card-title">👓 Defeitos da Visão — Aplicação em Óculos</div>
+<div class="tabs">
+<div class="tab active" onclick="switchTab('vis',0,this)">Miopia</div>
+<div class="tab" onclick="switchTab('vis',1,this)">Hipermetropia</div>
+<div class="tab" onclick="switchTab('vis',2,this)">Astigmatismo</div>
+</div>
+<div class="tab-content active" id="vis0">
+<div class="ci"><div class="ci-icon">😵</div><div class="ci-body"><strong>Miopia — vê bem de perto, mal ao longe</strong><p>O globo ocular é muito longo — a imagem forma-se à frente da retina. Correcção: lente <strong>divergente</strong> (côncava), que afasta os raios antes de entrarem no olho. Dioptria negativa (ex: -2,5 D).</p></div></div>
+</div>
+<div class="tab-content" id="vis1">
+<div class="ci"><div class="ci-icon">🔭</div><div class="ci-body"><strong>Hipermetropia — vê bem ao longe, mal de perto</strong><p>O globo ocular é muito curto — a imagem formaria-se atrás da retina. Correcção: lente <strong>convergente</strong> (convexa), que aproxima os raios. Dioptria positiva (ex: +3,0 D).</p></div></div>
+</div>
+<div class="tab-content" id="vis2">
+<div class="ci"><div class="ci-icon">💫</div><div class="ci-body"><strong>Astigmatismo — visão distorcida a todas as distâncias</strong><p>Curvatura irregular da córnea — diferentes planos focam em pontos diferentes. Correcção: lentes cilíndricas que compensam a curvatura irregular.</p></div></div>
+</div>
+</div>
+<div class="lab-card">
+<div class="card-title">🧪 Actividade prática da Aula 6</div>
+<div class="study-tip"><strong>Objectivo:</strong> Comparar a formação de imagens em lentes convergentes e divergentes, e relacionar com a correcção de problemas de visão.</div>
+<div style="font-size:13px;color:var(--texto2);line-height:1.8;margin:10px 0;">
+<strong>Passo 1.</strong> Com lente <strong>Convergente</strong> e f=90px, coloca o objecto longe (p=320px). Regista p', tipo e orientação da imagem.<br/>
+<strong>Passo 2.</strong> Aproxima o objecto até p=90px (igual a f) e depois até p=40px (dentro do foco, como uma lupa). Observa a mudança de imagem real para virtual.<br/>
+<strong>Passo 3.</strong> Muda para lente <strong>Divergente</strong> e repete com p=180px e p=320px. Confirma que a imagem se mantém sempre virtual, direita e reduzida — como acontece nos óculos de miopia.
+</div>
+<div style="overflow-x:auto;margin:12px 0;">
+<table class="tbl">
+<thead><tr><th>Tipo</th><th>p (objecto)</th><th>p' (imagem)</th><th>Real/Virtual</th><th>Dioptrias (P)</th></tr></thead>
+<tbody>
+<tr><td>Convergente</td><td>320px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Convergente</td><td>90px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Convergente</td><td>40px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Divergente</td><td>180px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+<tr><td>Divergente</td><td>320px</td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td><td class="fill" contenteditable="true"></td></tr>
+</tbody>
+</table>
+</div>
+<div class="study-tip">💭 <strong>Conclusões:</strong> Observa os dados que registaste na tabela. Em que posição do objecto a lente convergente deixou de formar imagem real e passou a formar imagem virtual? E a lente divergente, que tipo de imagem formou em todas as posições que testaste? Com base nisto, explica porque a lupa amplia e os óculos de miopia reduzem a imagem.</div>
+</div>
+<div class="card lesson-quiz">
+<div class="card-title">📝 Verificação da aprendizagem — 5 questões</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 1 / 5</div>
+<div class="q-text">Uma lente convergente é geralmente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Mais espessa no centro</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Mais fina no centro</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Opaca</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Sem foco</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Lentes convergentes têm centro mais espesso.</div>
+<div class="q-fb err">❌ Revê este ponto: Lentes convergentes têm centro mais espesso.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 2 / 5</div>
+<div class="q-text">A lente divergente é usada para corrigir:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Miopia</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Hipermetropia</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Eclipse</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Reflexão difusa</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Na miopia usam-se lentes divergentes.</div>
+<div class="q-fb err">❌ Revê este ponto: Na miopia usam-se lentes divergentes.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 3 / 5</div>
+<div class="q-text">A unidade da vergência é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Dioptria</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Newton</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Joule</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Metro por segundo</div>
+</div>
+<div class="q-fb ok">✅ Correcto! Vergência é medida em dioptrias.</div>
+<div class="q-fb err">❌ Revê este ponto: Vergência é medida em dioptrias.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 4 / 5</div>
+<div class="q-text">A lupa usa principalmente uma lente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="miniAns(this,true)"><span class="q-letter">A</span>Convergente</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">B</span>Divergente</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">C</span>Opaca</div>
+<div class="q-opt" onclick="miniAns(this,false)"><span class="q-letter">D</span>Plana sem curvatura</div>
+</div>
+<div class="q-fb ok">✅ Correcto! A lupa aumenta imagens com lente convergente.</div>
+<div class="q-fb err">❌ Revê este ponto: A lupa aumenta imagens com lente convergente.</div>
+</div>
+<div class="qblock mini-q">
+<div class="q-num">Questão 5 / 5<span class="q-tag-open">Aberta</span></div>
+<div class="q-text">Explica o que representa a equação de Gauss para lentes (1/f = 1/p + 1/p') e o que significam f, p e p'.</div>
+<textarea class="q-open-input" placeholder="Escreve a tua resposta aqui..." rows="3" onblur="markOpenDone(this)"></textarea>
+</div>
+</div>
+<div style="text-align:left;margin-top:24px;"><button class="btn btn-ghost" onclick="completeLesson(6)">✓ Confirmar aula 6 como concluída</button></div>
+<div class="nav-bot">
+<button class="btn btn-ghost" onclick="goTo(5)">← Anterior</button>
+<button class="btn btn-luz" onclick="goTo(7)">Avaliação Final 🏆 →</button>
+</div>
+</div><div class="sec" id="sec7">
+<div class="sec-head">
+<div class="sec-icon" style="background: var(--azul);">🏆</div>
+<div class="sec-title"><h2>Avaliação Final — Óptica Geométrica</h2><p>25 questões abrangendo todas as 6 aulas</p></div>
+</div>
+<div class="card">
+<div class="card-title">📌 Orientações para a avaliação</div>
+<div class="conceito-list">
+<div class="ci"><div class="ci-icon">🧠</div><div class="ci-body"><strong>Antes de responder</strong><p>Revê as fórmulas, observa novamente os simuladores e tenta explicar cada fenómeno com as tuas palavras. O objectivo é verificar compreensão, não decorar respostas.</p></div></div>
+
+</div>
+<div class="card" id="quiz-wrap">
+<div class="qblock" id="qb1">
+<div class="q-num">Questão 1 / 25 · Aula 1 · Propagação Rectilínea da Luz</div>
+<div class="q-text">Em meio homogéneo e transparente, a luz propaga-se principalmente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(1,'a')"><span class="q-letter">A</span>Em linha recta</div>
+<div class="q-opt" onclick="ans(1,'b')"><span class="q-letter">B</span>Em espiral</div>
+<div class="q-opt" onclick="ans(1,'c')"><span class="q-letter">C</span>Em curvas aleatórias</div>
+<div class="q-opt" onclick="ans(1,'d')"><span class="q-letter">D</span>Apenas para baixo</div>
+</div>
+<div class="q-fb ok" id="f1ok">✅ Correcto! Em óptica geométrica, considera-se que a luz segue trajectória rectilínea em meio homogéneo.</div>
+<div class="q-fb err" id="f1err">❌ Revê: Em óptica geométrica, considera-se que a luz segue trajectória rectilínea em meio homogéneo.</div>
+</div>
+<div class="qblock" id="qb2" style="display:none;">
+<div class="q-num">Questão 2 / 25 · Aula 1 · Propagação Rectilínea da Luz</div>
+<div class="q-text">Qual é uma fonte primária de luz?</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(2,'a')"><span class="q-letter">A</span>Lua</div>
+<div class="q-opt" onclick="ans(2,'b')"><span class="q-letter">B</span>Espelho</div>
+<div class="q-opt" onclick="ans(2,'c')"><span class="q-letter">C</span>Sol</div>
+<div class="q-opt" onclick="ans(2,'d')"><span class="q-letter">D</span>Livro</div>
+</div>
+<div class="q-fb ok" id="f2ok">✅ Correcto! O Sol emite luz própria, por isso é fonte primária.</div>
+<div class="q-fb err" id="f2err">❌ Revê: O Sol emite luz própria, por isso é fonte primária.</div>
+</div>
+<div class="qblock" id="qb3" style="display:none;">
+<div class="q-num">Questão 3 / 25 · Aula 1 · Propagação Rectilínea da Luz</div>
+<div class="q-text">Um corpo opaco é aquele que:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(3,'a')"><span class="q-letter">A</span>Deixa passar toda a luz</div>
+<div class="q-opt" onclick="ans(3,'b')"><span class="q-letter">B</span>Não deixa passar luz</div>
+<div class="q-opt" onclick="ans(3,'c')"><span class="q-letter">C</span>Apenas muda a cor da luz</div>
+<div class="q-opt" onclick="ans(3,'d')"><span class="q-letter">D</span>Produz luz própria</div>
+</div>
+<div class="q-fb ok" id="f3ok">✅ Correcto! Corpos opacos bloqueiam a passagem da luz.</div>
+<div class="q-fb err" id="f3err">❌ Revê: Corpos opacos bloqueiam a passagem da luz.</div>
+</div>
+<div class="qblock" id="qb4" style="display:none;">
+<div class="q-num">Questão 4 / 25 · Aula 1 · Propagação Rectilínea da Luz</div>
+<div class="q-text">A penumbra aparece com maior evidência quando a fonte luminosa é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(4,'a')"><span class="q-letter">A</span>Extensa</div>
+<div class="q-opt" onclick="ans(4,'b')"><span class="q-letter">B</span>Inexistente</div>
+<div class="q-opt" onclick="ans(4,'c')"><span class="q-letter">C</span>Sempre laser</div>
+<div class="q-opt" onclick="ans(4,'d')"><span class="q-letter">D</span>Pontual perfeita</div>
+</div>
+<div class="q-fb ok" id="f4ok">✅ Correcto! Fontes extensas produzem região parcialmente iluminada.</div>
+<div class="q-fb err" id="f4err">❌ Revê: Fontes extensas produzem região parcialmente iluminada.</div>
+</div>
+<div class="qblock" id="qb5" style="display:none;">
+<div class="q-num">Questão 5 / 25 · Aula 2 · Reflexão da Luz</div>
+<div class="q-text">Na reflexão, os ângulos devem ser medidos em relação:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(5,'a')"><span class="q-letter">A</span>À normal</div>
+<div class="q-opt" onclick="ans(5,'b')"><span class="q-letter">B</span>À horizontal da folha</div>
+<div class="q-opt" onclick="ans(5,'c')"><span class="q-letter">C</span>À cor do espelho</div>
+<div class="q-opt" onclick="ans(5,'d')"><span class="q-letter">D</span>Ao tamanho do objecto</div>
+</div>
+<div class="q-fb ok" id="f5ok">✅ Correcto! Os ângulos de incidência e reflexão são medidos a partir da normal.</div>
+<div class="q-fb err" id="f5err">❌ Revê: Os ângulos de incidência e reflexão são medidos a partir da normal.</div>
+</div>
+<div class="qblock" id="qb6" style="display:none;">
+<div class="q-num">Questão 6 / 25 · Aula 2 · Reflexão da Luz</div>
+<div class="q-text">Se o ângulo de incidência é 30°, o ângulo de reflexão é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(6,'a')"><span class="q-letter">A</span>15°</div>
+<div class="q-opt" onclick="ans(6,'b')"><span class="q-letter">B</span>30°</div>
+<div class="q-opt" onclick="ans(6,'c')"><span class="q-letter">C</span>60°</div>
+<div class="q-opt" onclick="ans(6,'d')"><span class="q-letter">D</span>90°</div>
+</div>
+<div class="q-fb ok" id="f6ok">✅ Correcto! Pela segunda lei da reflexão, θi = θr.</div>
+<div class="q-fb err" id="f6err">❌ Revê: Pela segunda lei da reflexão, θi = θr.</div>
+</div>
+<div class="qblock" id="qb7" style="display:none;">
+<div class="q-num">Questão 7 / 25 · Aula 2 · Reflexão da Luz</div>
+<div class="q-text">A reflexão regular ocorre principalmente em:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(7,'a')"><span class="q-letter">A</span>Papel rugoso</div>
+<div class="q-opt" onclick="ans(7,'b')"><span class="q-letter">B</span>Parede áspera</div>
+<div class="q-opt" onclick="ans(7,'c')"><span class="q-letter">C</span>Espelho polido</div>
+<div class="q-opt" onclick="ans(7,'d')"><span class="q-letter">D</span>Solo de areia</div>
+</div>
+<div class="q-fb ok" id="f7ok">✅ Correcto! Superfícies lisas e polidas produzem reflexão regular.</div>
+<div class="q-fb err" id="f7err">❌ Revê: Superfícies lisas e polidas produzem reflexão regular.</div>
+</div>
+<div class="qblock" id="qb8" style="display:none;">
+<div class="q-num">Questão 8 / 25 · Aula 2 · Reflexão da Luz</div>
+<div class="q-text">A reflexão difusa é importante porque:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(8,'a')"><span class="q-letter">A</span>Impede a visão</div>
+<div class="q-opt" onclick="ans(8,'b')"><span class="q-letter">B</span>Permite ver objectos de várias posições</div>
+<div class="q-opt" onclick="ans(8,'c')"><span class="q-letter">C</span>Só acontece no vácuo</div>
+<div class="q-opt" onclick="ans(8,'d')"><span class="q-letter">D</span>Transforma luz em som</div>
+</div>
+<div class="q-fb ok" id="f8ok">✅ Correcto! A luz espalhada chega aos olhos de observadores em diferentes posições.</div>
+<div class="q-fb err" id="f8err">❌ Revê: A luz espalhada chega aos olhos de observadores em diferentes posições.</div>
+</div>
+<div class="qblock" id="qb9" style="display:none;">
+<div class="q-num">Questão 9 / 25 · Aula 3 · Refracção da Luz</div>
+<div class="q-text">A refracção acontece quando a luz:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(9,'a')"><span class="q-letter">A</span>Muda de meio e pode mudar de direcção</div>
+<div class="q-opt" onclick="ans(9,'b')"><span class="q-letter">B</span>Desaparece completamente</div>
+<div class="q-opt" onclick="ans(9,'c')"><span class="q-letter">C</span>Só reflecte no espelho</div>
+<div class="q-opt" onclick="ans(9,'d')"><span class="q-letter">D</span>É sempre absorvida</div>
+</div>
+<div class="q-fb ok" id="f9ok">✅ Correcto! A refracção envolve mudança de meio e alteração da velocidade da luz.</div>
+<div class="q-fb err" id="f9err">❌ Revê: A refracção envolve mudança de meio e alteração da velocidade da luz.</div>
+</div>
+<div class="qblock" id="qb10" style="display:none;">
+<div class="q-num">Questão 10 / 25 · Aula 3 · Refracção da Luz</div>
+<div class="q-text">Ao passar do ar para o vidro, a luz geralmente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(10,'a')"><span class="q-letter">A</span>Aproxima-se da normal</div>
+<div class="q-opt" onclick="ans(10,'b')"><span class="q-letter">B</span>Afasta-se sempre da normal</div>
+<div class="q-opt" onclick="ans(10,'c')"><span class="q-letter">C</span>Não muda velocidade</div>
+<div class="q-opt" onclick="ans(10,'d')"><span class="q-letter">D</span>Transforma-se em calor totalmente</div>
+</div>
+<div class="q-fb ok" id="f10ok">✅ Correcto! O vidro é mais refringente que o ar; o raio aproxima-se da normal.</div>
+<div class="q-fb err" id="f10err">❌ Revê: O vidro é mais refringente que o ar; o raio aproxima-se da normal.</div>
+</div>
+<div class="qblock" id="qb11" style="display:none;">
+<div class="q-num">Questão 11 / 25 · Aula 3 · Refracção da Luz</div>
+<div class="q-text">O índice de refracção está relacionado com:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(11,'a')"><span class="q-letter">A</span>A velocidade da luz no meio</div>
+<div class="q-opt" onclick="ans(11,'b')"><span class="q-letter">B</span>A massa do espelho</div>
+<div class="q-opt" onclick="ans(11,'c')"><span class="q-letter">C</span>O som produzido</div>
+<div class="q-opt" onclick="ans(11,'d')"><span class="q-letter">D</span>A temperatura corporal</div>
+</div>
+<div class="q-fb ok" id="f11ok">✅ Correcto! O índice indica quanto a luz desacelera no meio.</div>
+<div class="q-fb err" id="f11err">❌ Revê: O índice indica quanto a luz desacelera no meio.</div>
+</div>
+<div class="qblock" id="qb12" style="display:none;">
+<div class="q-num">Questão 12 / 25 · Aula 3 · Refracção da Luz</div>
+<div class="q-text">A colher parece quebrada na água por causa da:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(12,'a')"><span class="q-letter">A</span>Refracção</div>
+<div class="q-opt" onclick="ans(12,'b')"><span class="q-letter">B</span>Evaporação</div>
+<div class="q-opt" onclick="ans(12,'c')"><span class="q-letter">C</span>Magnetização</div>
+<div class="q-opt" onclick="ans(12,'d')"><span class="q-letter">D</span>Combustão</div>
+</div>
+<div class="q-fb ok" id="f12ok">✅ Correcto! A mudança de meio desvia os raios e cria aparência de quebra.</div>
+<div class="q-fb err" id="f12err">❌ Revê: A mudança de meio desvia os raios e cria aparência de quebra.</div>
+</div>
+<div class="qblock" id="qb13" style="display:none;">
+<div class="q-num">Questão 13 / 25 · Aula 4 · Espelhos Planos</div>
+<div class="q-text">A imagem no espelho plano é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(13,'a')"><span class="q-letter">A</span>Real e invertida</div>
+<div class="q-opt" onclick="ans(13,'b')"><span class="q-letter">B</span>Virtual, direita e do mesmo tamanho</div>
+<div class="q-opt" onclick="ans(13,'c')"><span class="q-letter">C</span>Real e maior</div>
+<div class="q-opt" onclick="ans(13,'d')"><span class="q-letter">D</span>Sempre menor</div>
+</div>
+<div class="q-fb ok" id="f13ok">✅ Correcto! A imagem de espelho plano é virtual, direita e igual ao objecto.</div>
+<div class="q-fb err" id="f13err">❌ Revê: A imagem de espelho plano é virtual, direita e igual ao objecto.</div>
+</div>
+<div class="qblock" id="qb14" style="display:none;">
+<div class="q-num">Questão 14 / 25 · Aula 4 · Espelhos Planos</div>
+<div class="q-text">Se o objecto está a 2 m do espelho plano, a imagem fica:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(14,'a')"><span class="q-letter">A</span>2 m atrás do espelho</div>
+<div class="q-opt" onclick="ans(14,'b')"><span class="q-letter">B</span>4 m à frente do espelho</div>
+<div class="q-opt" onclick="ans(14,'c')"><span class="q-letter">C</span>No próprio espelho</div>
+<div class="q-opt" onclick="ans(14,'d')"><span class="q-letter">D</span>A 1 cm do espelho</div>
+</div>
+<div class="q-fb ok" id="f14ok">✅ Correcto! Objecto e imagem ficam a distâncias iguais do espelho.</div>
+<div class="q-fb err" id="f14err">❌ Revê: Objecto e imagem ficam a distâncias iguais do espelho.</div>
+</div>
+<div class="qblock" id="qb15" style="display:none;">
+<div class="q-num">Questão 15 / 25 · Aula 4 · Espelhos Planos</div>
+<div class="q-text">A imagem é chamada virtual porque:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(15,'a')"><span class="q-letter">A</span>Não é formada pelo cruzamento real dos raios</div>
+<div class="q-opt" onclick="ans(15,'b')"><span class="q-letter">B</span>Não pode ser vista</div>
+<div class="q-opt" onclick="ans(15,'c')"><span class="q-letter">C</span>É sempre pequena</div>
+<div class="q-opt" onclick="ans(15,'d')"><span class="q-letter">D</span>Só aparece no escuro</div>
+</div>
+<div class="q-fb ok" id="f15ok">✅ Correcto! Os prolongamentos dos raios parecem vir de trás do espelho.</div>
+<div class="q-fb err" id="f15err">❌ Revê: Os prolongamentos dos raios parecem vir de trás do espelho.</div>
+</div>
+<div class="qblock" id="qb16" style="display:none;">
+<div class="q-num">Questão 16 / 25 · Aula 4 · Espelhos Planos</div>
+<div class="q-text">O espelho plano produz principalmente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(16,'a')"><span class="q-letter">A</span>Reflexão regular</div>
+<div class="q-opt" onclick="ans(16,'b')"><span class="q-letter">B</span>Refracção total</div>
+<div class="q-opt" onclick="ans(16,'c')"><span class="q-letter">C</span>Dispersão sonora</div>
+<div class="q-opt" onclick="ans(16,'d')"><span class="q-letter">D</span>Absorção completa</div>
+</div>
+<div class="q-fb ok" id="f16ok">✅ Correcto! A superfície polida reflecte ordenadamente os raios.</div>
+<div class="q-fb err" id="f16err">❌ Revê: A superfície polida reflecte ordenadamente os raios.</div>
+</div>
+<div class="qblock" id="qb17" style="display:none;">
+<div class="q-num">Questão 17 / 25 · Aula 5 · Espelhos Esféricos: Côncavos e Convexos</div>
+<div class="q-text">O espelho côncavo é considerado:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(17,'a')"><span class="q-letter">A</span>Convergente</div>
+<div class="q-opt" onclick="ans(17,'b')"><span class="q-letter">B</span>Divergente sempre</div>
+<div class="q-opt" onclick="ans(17,'c')"><span class="q-letter">C</span>Plano</div>
+<div class="q-opt" onclick="ans(17,'d')"><span class="q-letter">D</span>Opaco</div>
+</div>
+<div class="q-fb ok" id="f17ok">✅ Correcto! O côncavo converge raios paralelos para o foco.</div>
+<div class="q-fb err" id="f17err">❌ Revê: O côncavo converge raios paralelos para o foco.</div>
+</div>
+<div class="qblock" id="qb18" style="display:none;">
+<div class="q-num">Questão 18 / 25 · Aula 5 · Espelhos Esféricos: Côncavos e Convexos</div>
+<div class="q-text">O espelho convexo forma imagem:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(18,'a')"><span class="q-letter">A</span>Virtual, direita e reduzida</div>
+<div class="q-opt" onclick="ans(18,'b')"><span class="q-letter">B</span>Real e invertida sempre</div>
+<div class="q-opt" onclick="ans(18,'c')"><span class="q-letter">C</span>Maior e projectável</div>
+<div class="q-opt" onclick="ans(18,'d')"><span class="q-letter">D</span>Sem foco</div>
+</div>
+<div class="q-fb ok" id="f18ok">✅ Correcto! O convexo forma sempre imagem virtual, direita e menor.</div>
+<div class="q-fb err" id="f18err">❌ Revê: O convexo forma sempre imagem virtual, direita e menor.</div>
+</div>
+<div class="qblock" id="qb19" style="display:none;">
+<div class="q-num">Questão 19 / 25 · Aula 5 · Espelhos Esféricos: Côncavos e Convexos</div>
+<div class="q-text">A relação entre foco e raio de curvatura é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(19,'a')"><span class="q-letter">A</span>f = R/2</div>
+<div class="q-opt" onclick="ans(19,'b')"><span class="q-letter">B</span>f = 2R</div>
+<div class="q-opt" onclick="ans(19,'c')"><span class="q-letter">C</span>R = f/4</div>
+<div class="q-opt" onclick="ans(19,'d')"><span class="q-letter">D</span>f = R²</div>
+</div>
+<div class="q-fb ok" id="f19ok">✅ Correcto! Nos espelhos esféricos, f corresponde a metade do raio de curvatura.</div>
+<div class="q-fb err" id="f19err">❌ Revê: Nos espelhos esféricos, f corresponde a metade do raio de curvatura.</div>
+</div>
+<div class="qblock" id="qb20" style="display:none;">
+<div class="q-num">Questão 20 / 25 · Aula 5 · Espelhos Esféricos: Côncavos e Convexos</div>
+<div class="q-text">Espelhos convexos são usados em retrovisores porque:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(20,'a')"><span class="q-letter">A</span>Aumentam o campo visual</div>
+<div class="q-opt" onclick="ans(20,'b')"><span class="q-letter">B</span>Aumentam sempre o tamanho real</div>
+<div class="q-opt" onclick="ans(20,'c')"><span class="q-letter">C</span>Eliminam a reflexão</div>
+<div class="q-opt" onclick="ans(20,'d')"><span class="q-letter">D</span>Funcionam como lentes</div>
+</div>
+<div class="q-fb ok" id="f20ok">✅ Correcto! Eles mostram uma região maior do ambiente.</div>
+<div class="q-fb err" id="f20err">❌ Revê: Eles mostram uma região maior do ambiente.</div>
+</div>
+<div class="qblock" id="qb21" style="display:none;">
+<div class="q-num">Questão 21 / 25 · Aula 6 · Lentes Ópticas</div>
+<div class="q-text">Uma lente convergente é geralmente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(21,'a')"><span class="q-letter">A</span>Mais espessa no centro</div>
+<div class="q-opt" onclick="ans(21,'b')"><span class="q-letter">B</span>Mais fina no centro</div>
+<div class="q-opt" onclick="ans(21,'c')"><span class="q-letter">C</span>Opaca</div>
+<div class="q-opt" onclick="ans(21,'d')"><span class="q-letter">D</span>Sem foco</div>
+</div>
+<div class="q-fb ok" id="f21ok">✅ Correcto! Lentes convergentes têm centro mais espesso.</div>
+<div class="q-fb err" id="f21err">❌ Revê: Lentes convergentes têm centro mais espesso.</div>
+</div>
+<div class="qblock" id="qb22" style="display:none;">
+<div class="q-num">Questão 22 / 25 · Aula 6 · Lentes Ópticas</div>
+<div class="q-text">A lente divergente é usada para corrigir:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(22,'a')"><span class="q-letter">A</span>Miopia</div>
+<div class="q-opt" onclick="ans(22,'b')"><span class="q-letter">B</span>Hipermetropia</div>
+<div class="q-opt" onclick="ans(22,'c')"><span class="q-letter">C</span>Eclipse</div>
+<div class="q-opt" onclick="ans(22,'d')"><span class="q-letter">D</span>Reflexão difusa</div>
+</div>
+<div class="q-fb ok" id="f22ok">✅ Correcto! Na miopia usam-se lentes divergentes.</div>
+<div class="q-fb err" id="f22err">❌ Revê: Na miopia usam-se lentes divergentes.</div>
+</div>
+<div class="qblock" id="qb23" style="display:none;">
+<div class="q-num">Questão 23 / 25 · Aula 6 · Lentes Ópticas</div>
+<div class="q-text">A unidade da vergência é:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(23,'a')"><span class="q-letter">A</span>Dioptria</div>
+<div class="q-opt" onclick="ans(23,'b')"><span class="q-letter">B</span>Newton</div>
+<div class="q-opt" onclick="ans(23,'c')"><span class="q-letter">C</span>Joule</div>
+<div class="q-opt" onclick="ans(23,'d')"><span class="q-letter">D</span>Metro por segundo</div>
+</div>
+<div class="q-fb ok" id="f23ok">✅ Correcto! Vergência é medida em dioptrias.</div>
+<div class="q-fb err" id="f23err">❌ Revê: Vergência é medida em dioptrias.</div>
+</div>
+<div class="qblock" id="qb24" style="display:none;">
+<div class="q-num">Questão 24 / 25 · Aula 6 · Lentes Ópticas</div>
+<div class="q-text">A lupa usa principalmente uma lente:</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(24,'a')"><span class="q-letter">A</span>Convergente</div>
+<div class="q-opt" onclick="ans(24,'b')"><span class="q-letter">B</span>Divergente</div>
+<div class="q-opt" onclick="ans(24,'c')"><span class="q-letter">C</span>Opaca</div>
+<div class="q-opt" onclick="ans(24,'d')"><span class="q-letter">D</span>Plana sem curvatura</div>
+</div>
+<div class="q-fb ok" id="f24ok">✅ Correcto! A lupa aumenta imagens com lente convergente.</div>
+<div class="q-fb err" id="f24err">❌ Revê: A lupa aumenta imagens com lente convergente.</div>
+</div>
+<div class="qblock" id="qb25" style="display:none;">
+<div class="q-num">Questão 25 / 25 · Integração geral</div>
+<div class="q-text">Qual é a sequência mais correcta para estudar a formação de imagens em óptica geométrica?</div>
+<div class="q-opts">
+<div class="q-opt" onclick="ans(25,'a')"><span class="q-letter">A</span>Identificar o fenómeno, desenhar raios principais, aplicar leis/fórmulas e interpretar a imagem</div>
+<div class="q-opt" onclick="ans(25,'b')"><span class="q-letter">B</span>Escolher respostas ao acaso</div>
+<div class="q-opt" onclick="ans(25,'c')"><span class="q-letter">C</span>Ignorar o meio óptico</div>
+<div class="q-opt" onclick="ans(25,'d')"><span class="q-letter">D</span>Usar apenas memorização sem desenho</div>
+</div>
+<div class="q-fb ok" id="f25ok">✅ Correcto! A análise correcta combina conceito, desenho de raios, cálculo e interpretação física.</div>
+<div class="q-fb err" id="f25err">❌ Revê: A análise correcta combina conceito, desenho de raios, cálculo e interpretação física.</div>
+</div>
+<div class="score-box" id="qscore">
+<div class="score-ring" id="sring"><span id="sval">0/25</span></div>
+<div class="score-msg" id="smsg"></div>
+<div class="score-sub" id="ssub"></div>
+<div style="margin-top:24px;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+<button class="btn btn-luz" onclick="restartQ()">🔄 Repetir Teste</button>
+<button class="btn btn-ghost" onclick="goTo(0)">Voltar ao início</button>
+</div>
+</div>
+</div>
+<div class="nav-bot">
+<button class="btn btn-ghost" onclick="goTo(6)">← Aula 6</button>
+<div style="font-size:13px;color:var(--texto2);">Responde às questões acima ↑</div>
+</div>
+</div></div>
+<!-- ══ SEC 1: PROPAGAÇÃO ══ -->
+<!-- ══ SEC 2: REFLEXÃO ══ -->
+<!-- ══ SEC 3: REFRACÇÃO ══ -->
+<!-- ══ SEC 4: ESPELHOS PLANOS ══ -->
+<!-- ══ SEC 5: ESPELHOS ESFÉRICOS ══ -->
+<!-- ══ SEC 6: LENTES ÓPTICAS ══ -->
+<!-- ══ SEC 7: AVALIAÇÃO FINAL ══ -->
+<div class="sec" id="secComm">
+<div class="sec-head">
+<div class="sec-icon">💬</div>
+<div class="sec-title"><h2>Comunicação da Turma</h2><p>Avisos do professor e fórum de dúvidas</p></div>
+</div>
+
+<div class="card" id="prazoBannerComm" style="display:none;border-color:#93c5fd;background:var(--azul-bg);">
+<div class="card-title">⏳ Prazo da Avaliação Final</div>
+<p id="prazoTextoComm" style="font-size:14px;color:var(--texto);"></p>
+</div>
+
+<div class="card">
+<div class="card-title">📣 Mural de Avisos</div>
+<div id="listaAvisos" style="display:flex;flex-direction:column;gap:12px;"></div>
+<p id="semAvisos" style="color:var(--texto3);font-size:13px;">Ainda não há avisos.</p>
+</div>
+
+<div class="card">
+<div class="card-title">🗨️ Fórum de Dúvidas</div>
+<div class="tip"><span class="tip-icon">💡</span>Coloca aqui as tuas dúvidas sobre a matéria — o professor e os colegas podem responder.</div>
+<div id="listaForum" style="display:flex;flex-direction:column;gap:12px;margin:14px 0;"></div>
+<div style="display:flex;gap:8px;margin-top:10px;">
+<input id="forumInput" placeholder="Escreve a tua pergunta ou comentário..." style="flex:1;padding:11px 14px;border:1px solid var(--borda);border-radius:8px;font-size:14px;font-family:inherit;background:var(--bg2);color:var(--texto);" type="text"/>
+<button class="btn btn-luz" onclick="enviarForum()">Enviar</button>
+</div>
+</div>
+
+<div class="nav-bot">
+<button class="btn btn-ghost" onclick="goTo(0)">← Voltar à introdução</button>
+<div></div>
+</div>
+</div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+<!-- /wrap -->
+<script>
+// ══════════════════════════════════════
+// BG PARTICLES
+// ══════════════════════════════════════
+const bgC = document.getElementById('bg-canvas');
+const bgX = bgC.getContext('2d');
+let particles = [];
+function resizeBg(){bgC.width=window.innerWidth;bgC.height=window.innerHeight;}
+resizeBg();
+window.addEventListener('resize',resizeBg);
+for(let i=0;i<60;i++) particles.push({x:Math.random()*window.innerWidth,y:Math.random()*window.innerHeight,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,r:Math.random()*1.5+0.3,a:Math.random()});
+function animBg(){
+ bgX.clearRect(0,0,bgC.width,bgC.height);
+ particles.forEach(p=>{
+ p.x+=p.vx;p.y+=p.vy;
+ if(p.x<0||p.x>bgC.width)p.vx*=-1;
+ if(p.y<0||p.y>bgC.height)p.vy*=-1;
+ bgX.beginPath();bgX.arc(p.x,p.y,p.r,0,Math.PI*2);
+ bgX.fillStyle=`rgba(37,99,235,${p.a*0.3})`;bgX.fill();
+ });
+ requestAnimationFrame(animBg);
+}
+animBg();
+
+// ══════════════════════════════════════
+// SPLASH
+// ══════════════════════════════════════
+function enterModule(){ updateDashboard();
+ document.getElementById('splash').style.opacity='0';
+ setTimeout(()=>{document.getElementById('splash').style.display='none';document.getElementById('app').style.display='block';},800);
+ initAllCanvases();
+}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+let cur=0; const total=8; const visited=new Set([0]);
+const badges=['🌟 Início','💡 Propagação','🪞 Reflexão','🌊 Refracção','🪞 Espelhos Planos','🔮 Espelhos Esféricos','🔍 Lentes','🏆 Avaliação'];
+
+function goTo(n){
+ document.getElementById('sec'+cur).classList.remove('active');
+ document.getElementById('nb'+cur).classList.remove('active');
+ const secC=document.getElementById('secComm'); if(secC)secC.classList.remove('active');
+ const nbC=document.getElementById('nbComm'); if(nbC)nbC.classList.remove('active');
+ cur=n; visited.add(n);
+ document.getElementById('sec'+n).classList.add('active');
+ document.getElementById('nb'+n).classList.add('active');
+ document.querySelectorAll('.nav-btn').forEach((el,i)=>{if(visited.has(i)&&i!==n)el.classList.add('done');});
+ const pct=Math.round((visited.size/total)*100);
+ document.getElementById('hfill').style.width=pct+'%';
+ document.getElementById('hpct').textContent=pct+'%';
+ document.getElementById('hbadge').textContent=badges[n]||'';
+ window.scrollTo({top:0,behavior:'smooth'});
+ // redraw current canvas
+ const draws=[null,drawShadow,drawReflexao,drawRefracao,null,drawEspelho,drawLente,null];
+ if(draws[n]) setTimeout(draws[n],100);
+}
+
+function goToComunicacao(){
+ document.getElementById('sec'+cur).classList.remove('active');
+ document.getElementById('nb'+cur).classList.remove('active');
+ document.getElementById('secComm').classList.add('active');
+ document.getElementById('nbComm').classList.add('active');
+ window.scrollTo({top:0,behavior:'smooth'});
+ carregarComunicacao();
+}
+
+function switchTab(prefix,idx,el){
+ const sec=el.closest('.sec');
+ sec.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+ el.classList.add('active');
+ sec.querySelectorAll(`.tab-content[id^="${prefix}"]`).forEach((c,i)=>c.classList.toggle('active',i===idx));
+}
+
+// ══════════════════════════════════════
+// CANVAS HELPERS
+// ══════════════════════════════════════
+function setupCanvas(id){
+ const c=document.getElementById(id);
+ if(!c)return null;
+ c.width=c.offsetWidth||700;
+ return c.getContext('2d');
+}
+function initAllCanvases(){setTimeout(()=>{drawShadow();drawReflexao();drawRefracao();drawEspelho();drawLente();drawPrisma();drawMicroscopio();},200);}
+window.addEventListener('resize',()=>{if(document.getElementById('app').style.display!=='none')initAllCanvases();});
+
+// ─── CANVAS 1: SHADOW ───
+function drawShadow(){
+  const c=document.getElementById('c1');if(!c)return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr;
+  c.height=280*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=rect.width,H=280;
+  ctx.clearRect(0,0,W,H);
+
+  const ang=parseFloat(document.getElementById('c1-ang').value);
+  const sz=parseFloat(document.getElementById('c1-sz').value);
+  const type=document.getElementById('c1-type').value;
+  document.getElementById('c1-ang-v').textContent=ang+'°';
+  document.getElementById('c1-sz-v').textContent=sz+'px';
+
+  ctx.fillStyle='#f1f5f9';
+  ctx.fillRect(0,0,W,H);
+  ctx.fillStyle='#e2e8f0';
+  ctx.fillRect(0,H-40,W,40);
+  ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(0,H-40);ctx.lineTo(W,H-40);ctx.stroke();
+
+  const ox=W/2, oy=H-40-sz/2;
+  const rad=ang*Math.PI/180;
+  const srcDist=220;
+  const sx=ox-Math.cos(rad)*srcDist;
+  const sy=oy-Math.sin(rad)*srcDist;
+
+  if(type==='point'){
+    const topY=oy-sz/2, botY=oy+sz/2;
+    const topX=ox-sz*0.1, botX=ox+sz*0.1;
+    const t1=getGroundIntersect(sx,sy,topX,topY,H-40);
+    const t2=getGroundIntersect(sx,sy,botX,botY,H-40);
+
+    if(t1&&t2){
+      ctx.fillStyle='rgba(15,23,42,0.2)';
+      ctx.beginPath();ctx.moveTo(t1.x,H-40);ctx.lineTo(t2.x,H-40);
+      ctx.lineTo(t2.x,H);ctx.lineTo(t1.x,H);ctx.closePath();ctx.fill();
+    }
+
+    ctx.strokeStyle='rgba(245,158,11,0.85)';ctx.lineWidth=2;
+    ctx.setLineDash([8,4]);
+    if(t1){ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(t1.x,H-40);ctx.stroke();}
+    if(t2){ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(t2.x,H-40);ctx.stroke();}
+    ctx.setLineDash([]);
+
+    ctx.fillStyle='#f59e0b';
+    ctx.beginPath();ctx.arc(sx,sy,10,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='rgba(245,158,11,0.25)';
+    ctx.beginPath();ctx.arc(sx,sy,22,0,Math.PI*2);ctx.fill();
+
+  } else {
+    const srcW=30;
+    const topS={x:sx-srcW/2,y:sy};const botS={x:sx+srcW/2,y:sy};
+    const topO={x:ox-sz*0.1,y:oy-sz/2};const botO={x:ox+sz*0.1,y:oy+sz/2};
+    const t_ts=getGroundIntersect(topS.x,topS.y,topO.x,topO.y,H-40);
+    const t_tb=getGroundIntersect(topS.x,topS.y,botO.x,botO.y,H-40);
+    const t_bs=getGroundIntersect(botS.x,botS.y,topO.x,topO.y,H-40);
+    const t_bb=getGroundIntersect(botS.x,botS.y,botO.x,botO.y,H-40);
+
+    if(t_bs&&t_tb&&t_ts&&t_bb){
+      const pMin=Math.min(t_ts.x,t_bb.x);
+      const pMax=Math.max(t_bs.x,t_tb.x);
+      const uMin=Math.max(t_ts.x,t_bb.x);
+      const uMax=Math.min(t_bs.x,t_tb.x);
+      ctx.fillStyle='rgba(15,23,42,0.08)';
+      ctx.fillRect(pMin,H-40,pMax-pMin,40);
+      if(uMax>uMin){
+        ctx.fillStyle='rgba(15,23,42,0.18)';
+        ctx.fillRect(uMin,H-40,uMax-uMin,40);
+      }
+    }
+    const grad=ctx.createLinearGradient(topS.x,sy,botS.x,sy);
+    grad.addColorStop(0,'rgba(245,158,11,0.85)');
+    grad.addColorStop(1,'rgba(245,158,11,0.85)');
+    ctx.fillStyle=grad;
+    ctx.fillRect(topS.x-4,sy-8,srcW+8,16);
+  }
+
+  ctx.fillStyle='#64748b';ctx.strokeStyle='#94a3b8';ctx.lineWidth=2;
+  ctx.fillRect(ox-sz*0.15,oy-sz/2,sz*0.3,sz);
+  ctx.strokeRect(ox-sz*0.15,oy-sz/2,sz*0.3,sz);
+  ctx.fillStyle='#64748b';ctx.font='12px Arial';ctx.textAlign='center';
+  ctx.fillText('Objecto',ox,oy-sz/2-8);
+}
+
+function getGroundIntersect(x1,y1,x2,y2,gy){
+  const t=(gy-y1)/(y2-y1);
+  if(t<0)return null;
+  return {x:x1+t*(x2-x1),y:gy};
+}
+
+function drawReflexao(){
+  const c=document.getElementById('c2');if(!c)return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr;
+  c.height=300*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=rect.width,H=300;
+  ctx.clearRect(0,0,W,H);
+
+  ctx.fillStyle='#f8fafc';
+  ctx.fillRect(0,0,W,H);
+
+  const ang=parseFloat(document.getElementById('c2-ang').value);
+  const type=document.getElementById('c2-type').value;
+  document.getElementById('c2-ang-v').textContent=ang+'°';
+  document.getElementById('c2-result').textContent=ang+'°';
+
+  const mx=W/2, my=H/2;
+
+  ctx.fillStyle='#e2e8f0';
+  ctx.fillRect(mx-150,my,300,H-my);
+  ctx.strokeStyle='#94a3b8';ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(mx-150,my);ctx.lineTo(mx+150,my);ctx.stroke();
+  ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;
+  for(let x=mx-140;x<mx+140;x+=12){
+    ctx.beginPath();ctx.moveTo(x,my);ctx.lineTo(x-8,my+10);ctx.stroke();
+  }
+
+  const rad=ang*Math.PI/180;
+  const len=180;
+  const ix=mx-Math.sin(rad)*len, iy=my-Math.cos(rad)*len;
+  ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(mx,my);ctx.stroke();
+
+  const rx=mx+Math.sin(rad)*len, ry=my-Math.cos(rad)*len;
+  ctx.strokeStyle='#2563eb';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(rx,ry);ctx.stroke();
+
+  if(type==='difusa'){
+    for(let i=-60;i<=60;i+=20){
+      const da=(i)*Math.PI/180;
+      ctx.strokeStyle='rgba(37,99,235,0.2)';ctx.lineWidth=1.5;
+      ctx.beginPath();ctx.moveTo(mx,my);
+      ctx.lineTo(mx+Math.sin(da)*80,my-Math.cos(da)*80);ctx.stroke();
+    }
+  }
+
+  ctx.strokeStyle='rgba(100,116,139,0.3)';ctx.lineWidth=1;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(mx,my-120);ctx.lineTo(mx,my+60);ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle='rgba(245,158,11,0.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(mx,my,40,-Math.PI/2,-Math.PI/2+rad,false);ctx.stroke();
+  ctx.strokeStyle='rgba(37,99,235,0.5)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(mx,my,40,-Math.PI/2,-Math.PI/2-rad,true);ctx.stroke();
+
+  ctx.fillStyle='#f59e0b';ctx.font='13px Arial';ctx.textAlign='left';
+  ctx.fillText('θᵢ='+ang+'°',mx-38,my-44);
+  ctx.fillStyle='#2563eb';ctx.textAlign='right';
+  ctx.fillText('θᵣ='+ang+'°',mx+38,my-44);
+  ctx.fillStyle='#64748b';ctx.textAlign='center';ctx.font='11px Arial';
+  ctx.fillText('Normal',mx+5,my-125);
+  ctx.fillStyle='#475569';ctx.font='12px Arial';
+  ctx.fillText(type==='regular'?'Superfície polida (Reflexão Regular)':'Superfície rugosa (Reflexão Difusa)',mx,my+22);
+
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#475569';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.stroke();
+}
+
+function drawRefracao(){
+  const c=document.getElementById('c3');if(!c)return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr;
+  c.height=320*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=rect.width,H=320;
+  ctx.clearRect(0,0,W,H);
+
+  const ang=parseFloat(document.getElementById('c3-ang').value);
+  const n1=parseFloat(document.getElementById('c3-n1').value);
+  const n2=parseFloat(document.getElementById('c3-n2').value);
+  document.getElementById('c3-ang-v').textContent=ang+'°';
+
+  const grad1=ctx.createLinearGradient(0,0,0,H/2);
+  grad1.addColorStop(0,'#f0f9ff');
+  grad1.addColorStop(1,'#e0f2fe');
+  ctx.fillStyle=grad1;
+  ctx.fillRect(0,0,W,H/2);
+
+  const grad2=ctx.createLinearGradient(0,H/2,0,H);
+  grad2.addColorStop(0,'#dbeafe');
+  grad2.addColorStop(1,'#bfdbfe');
+  ctx.fillStyle=grad2;
+  ctx.fillRect(0,H/2,W,H/2);
+
+  ctx.strokeStyle='#93c5fd';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,H/2);ctx.lineTo(W,H/2);ctx.stroke();
+
+  const mx=W/2, my=H/2;
+  const rad=ang*Math.PI/180;
+  const sinT2=n1*Math.sin(rad)/n2;
+  const tir=sinT2>=1;
+  document.getElementById('c3-tir').style.display=tir?'block':'none';
+
+  ctx.strokeStyle='rgba(100,116,139,0.25)';ctx.lineWidth=1;ctx.setLineDash([5,4]);
+  ctx.beginPath();ctx.moveTo(mx,10);ctx.lineTo(mx,H-10);ctx.stroke();
+  ctx.setLineDash([]);
+
+  const len=150;
+  const ix=mx-Math.sin(rad)*len, iy=my-Math.cos(rad)*len;
+  ctx.strokeStyle='#f59e0b';ctx.lineWidth=2.5;
+  ctx.beginPath();ctx.moveTo(ix,iy);ctx.lineTo(mx,my);ctx.stroke();
+
+  if(tir){
+    const rx=mx+Math.sin(rad)*len, ry=my-Math.cos(rad)*len;
+    ctx.strokeStyle='#dc2626';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(rx,ry);ctx.stroke();
+    document.getElementById('c3-result').textContent='RTI!';
+    document.getElementById('c3-result').style.color='#dc2626';
+  } else {
+    const t2=Math.asin(sinT2);
+    document.getElementById('c3-result').textContent=((t2*180/Math.PI).toFixed(1))+'°';
+    document.getElementById('c3-result').style.color='#2563eb';
+    const rx=mx+Math.sin(t2)*len, ry=my+Math.cos(t2)*len;
+    ctx.strokeStyle='#2563eb';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(rx,ry);ctx.stroke();
+
+    ctx.strokeStyle='rgba(37,99,235,0.4)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.arc(mx,my,45,Math.PI/2,Math.PI/2+t2,false);ctx.stroke();
+    ctx.fillStyle='#2563eb';ctx.font='12px Arial';ctx.textAlign='left';
+    ctx.fillText('θ₂='+(t2*180/Math.PI).toFixed(1)+'°',mx+14,my+35);
+  }
+
+  const rrx=mx+Math.sin(rad)*60, rry=my-Math.cos(rad)*60;
+  ctx.strokeStyle='rgba(219,39,119,0.4)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+  ctx.beginPath();ctx.moveTo(mx,my);ctx.lineTo(rrx,rry);ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle='rgba(245,158,11,0.4)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(mx,my,45,-Math.PI/2,-Math.PI/2+rad,false);ctx.stroke();
+
+  ctx.fillStyle='#64748b';ctx.font='12px Arial';ctx.textAlign='center';
+  ctx.fillText('n₁ = '+n1,mx-80,30);
+  ctx.fillText('n₂ = '+n2,mx-80,H-15);
+  ctx.fillStyle='#f59e0b';ctx.font='12px Arial';ctx.textAlign='right';
+  ctx.fillText('θ₁='+ang+'°',mx-12,my-30);
+
+  ctx.fillStyle='#f59e0b';
+  ctx.beginPath();ctx.arc(ix,iy,5,0,Math.PI*2);ctx.fill();
+
+  ctx.fillStyle='#fff';
+  ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.fill();
+  ctx.strokeStyle='#475569';ctx.lineWidth=2;
+  ctx.beginPath();ctx.arc(mx,my,5,0,Math.PI*2);ctx.stroke();
+}
+
+function drawEspelho(){
+  const c=document.getElementById('c4');if(!c)return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr;
+  c.height=340*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=rect.width,H=340;
+  ctx.clearRect(0,0,W,H);
+
+  ctx.fillStyle='#f1f5f9';
+  ctx.fillRect(0,0,W,H);
+
+  const type=document.getElementById('c4-type').value;
+  const f=parseFloat(document.getElementById('c4-f').value);
+  const p=parseFloat(document.getElementById('c4-p').value);
+  document.getElementById('c4-f-v').textContent=f.toFixed(0)+'px';
+  document.getElementById('c4-p-v').textContent=p.toFixed(0)+'px';
+
+  const cx=W*0.65, cy=H/2;
+  const sign=type==='concavo'?1:-1;
+  const fEff=sign*f;
+
+  let pp, imReal;
+  if(type==='concavo'){
+    pp=p*f/(p-f);
+    imReal=pp>0;
+  } else {
+    pp=-p*f/(p+f);
+    imReal=false;
+  }
+
+  const objH=50;
+  const ox=cx-p;
+  const ipx=cx-pp;
+
+  ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(20,cy);ctx.lineTo(W-20,cy);ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle='#64748b';ctx.lineWidth=3;
+  if(type==='concavo'){
+    ctx.beginPath();ctx.arc(cx+f*1.5,cy,f*1.8,Math.PI*0.6,Math.PI*1.4,false);ctx.stroke();
+  } else {
+    ctx.beginPath();ctx.arc(cx-f*1.5,cy,f*1.8,-Math.PI*0.4,Math.PI*0.4,false);ctx.stroke();
+  }
+
+  const fx=cx-fEff;
+  ctx.fillStyle='#db2777';
+  ctx.beginPath();ctx.arc(fx,cy,5,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#db2777';ctx.font='11px Arial';ctx.textAlign='center';ctx.fillText('F',fx,cy-10);
+
+  const ccx=cx-2*fEff;
+  ctx.fillStyle='#64748b';
+  ctx.beginPath();ctx.arc(ccx,cy,4,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#64748b';ctx.textAlign='center';ctx.fillText('C',ccx,cy-10);
+
+  if(ox>20&&ox<W-20){
+    ctx.strokeStyle='#f59e0b';ctx.fillStyle='#f59e0b';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(ox,cy);ctx.lineTo(ox,cy-objH);ctx.stroke();
+    arrowHead(ctx,ox,cy-objH,270);
+    ctx.font='12px Arial';ctx.fillText('obj',ox,cy+14);
+  }
+
+  const imgH=Math.abs(pp/p)*objH*(imReal?1:-1);
+  const drawImg=ipx>20&&ipx<W-20;
+  if(drawImg){
+    ctx.strokeStyle=imReal?'#059669':'#db2777';
+    ctx.fillStyle=imReal?'#059669':'#db2777';
+    ctx.lineWidth=2.5;ctx.setLineDash(imReal?[]:[4,3]);
+    ctx.beginPath();ctx.moveTo(ipx,cy);ctx.lineTo(ipx,cy-imgH);ctx.stroke();
+    ctx.setLineDash([]);
+    arrowHead(ctx,ipx,cy-imgH,imgH>0?270:90);
+    ctx.font='12px Arial';ctx.fillText('img',ipx,cy+14);
+  }
+
+  if(ox>20&&ox<W-20){
+    const ty=cy-objH;
+    ctx.strokeStyle='rgba(37,99,235,0.7)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ox,ty);ctx.lineTo(cx,ty);
+    if(imReal&&drawImg)ctx.lineTo(ipx,cy-imgH);
+    else ctx.lineTo(20,ty+(cx-20)*(cy-imgH-ty)/(cx-ipx));
+    ctx.stroke();
+
+    if(!imReal&&drawImg){
+      ctx.strokeStyle='rgba(219,39,119,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+      ctx.beginPath();ctx.moveTo(cx,ty);ctx.lineTo(ipx,cy-imgH);
+      ctx.stroke();ctx.setLineDash([]);
+    }
+
+    ctx.strokeStyle='rgba(37,99,235,0.4)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(ox,ty);ctx.lineTo(cx,cy-objH*(1-p/fEff));ctx.lineTo(20,cy-objH*(1-p/fEff));
+    ctx.stroke();ctx.setLineDash([]);
+  }
+
+  const M=pp===0?Infinity:-(pp/p);
+  document.getElementById('c4-info').innerHTML=`p'=${pp.toFixed(1)}<br>M=${M.toFixed(2)}<br>${imReal?'<span style="color:#059669">Real</span>':'<span style="color:#db2777">Virtual</span>'}<br>${M<0?'Invertida':'Direita'}`;
+}
+
+function arrowHead(ctx,x,y,deg){
+  const r=deg*Math.PI/180;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x+8*Math.cos(r-Math.PI*0.8),y+8*Math.sin(r-Math.PI*0.8));
+  ctx.lineTo(x+8*Math.cos(r+Math.PI*0.8),y+8*Math.sin(r+Math.PI*0.8));
+  ctx.closePath();ctx.fill();
+}
+
+function drawLente(){
+  const c=document.getElementById('c5');if(!c)return;
+  const dpr=window.devicePixelRatio||1;
+  const rect=c.getBoundingClientRect();
+  c.width=rect.width*dpr;
+  c.height=340*dpr;
+  const ctx=c.getContext('2d');
+  ctx.scale(dpr,dpr);
+  const W=rect.width,H=340;
+  ctx.clearRect(0,0,W,H);
+
+  ctx.fillStyle='#f1f5f9';
+  ctx.fillRect(0,0,W,H);
+
+  const type=document.getElementById('c5-type').value;
+  const f=parseFloat(document.getElementById('c5-f').value)*(type==='conv'?1:-1);
+  const p=parseFloat(document.getElementById('c5-p').value);
+  document.getElementById('c5-f-v').textContent=Math.abs(f).toFixed(0)+'px';
+  document.getElementById('c5-p-v').textContent=p.toFixed(0)+'px';
+
+  const lx=W/2, cy=H/2;
+  const pp=p*f/(p-f);
+  const imReal=pp>0;
+  const objH=55;
+  const ox=lx-p;
+  const ipx=lx+pp;
+  const imgH=-(pp/p)*objH;
+
+  ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.setLineDash([6,4]);
+  ctx.beginPath();ctx.moveTo(20,cy);ctx.lineTo(W-20,cy);ctx.stroke();
+  ctx.setLineDash([]);
+
+  ctx.strokeStyle='rgba(37,99,235,0.8)';ctx.lineWidth=2.5;
+  ctx.fillStyle='rgba(37,99,235,0.06)';
+  if(type==='conv'){
+    ctx.beginPath();
+    ctx.moveTo(lx,cy-70);
+    ctx.quadraticCurveTo(lx+22,cy,lx,cy+70);
+    ctx.quadraticCurveTo(lx-22,cy,lx,cy-70);
+    ctx.fill();ctx.stroke();
+  } else {
+    ctx.beginPath();
+    ctx.moveTo(lx-8,cy-70);
+    ctx.quadraticCurveTo(lx+10,cy,lx-8,cy+70);
+    ctx.lineTo(lx+8,cy+70);
+    ctx.quadraticCurveTo(lx-10,cy,lx+8,cy-70);
+    ctx.closePath();ctx.fill();ctx.stroke();
+  }
+
+  const f1x=lx+f, f2x=lx-f;
+  [f1x,f2x].forEach(fx=>{
+    if(fx>0&&fx<W){
+      ctx.fillStyle='#db2777';
+      ctx.beginPath();ctx.arc(fx,cy,5,0,Math.PI*2);ctx.fill();
+      ctx.fillStyle='#db2777';ctx.font='11px Arial';ctx.textAlign='center';ctx.fillText('F',fx,cy-10);
+    }
+  });
+
+  if(ox>10&&ox<W-10){
+    ctx.strokeStyle='#f59e0b';ctx.fillStyle='#f59e0b';ctx.lineWidth=2.5;
+    ctx.beginPath();ctx.moveTo(ox,cy);ctx.lineTo(ox,cy-objH);ctx.stroke();
+    arrowHead(ctx,ox,cy-objH,270);
+    ctx.font='12px Arial';ctx.fillText('obj',ox,cy+14);
+  }
+
+  const drawImg=ipx>10&&ipx<W-10;
+  if(drawImg){
+    ctx.strokeStyle=imReal?'#059669':'#db2777';
+    ctx.fillStyle=imReal?'#059669':'#db2777';
+    ctx.lineWidth=2.5;ctx.setLineDash(imReal?[]:[4,3]);
+    ctx.beginPath();ctx.moveTo(ipx,cy);ctx.lineTo(ipx,cy+imgH);ctx.stroke();
+    ctx.setLineDash([]);
+    arrowHead(ctx,ipx,cy+imgH,imgH<0?270:90);
+    ctx.font='12px Arial';ctx.fillText('img',ipx,cy+14);
+  }
+
+  if(ox>10&&ox<W-10){
+    const ty=cy-objH;
+    ctx.strokeStyle='rgba(37,99,235,0.7)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(ox,ty);ctx.lineTo(lx,ty);
+    if(imReal&&drawImg){
+      ctx.lineTo(ipx,cy+imgH);
+    } else {
+      const dx=lx-ipx, dy=ty-(cy+imgH);
+      const endX=W-10;
+      const t=dx!==0?(endX-lx)/dx:0;
+      ctx.lineTo(endX, ty+t*dy);
+    }
+    ctx.stroke();
+
+    if(!imReal&&drawImg){
+      ctx.strokeStyle='rgba(219,39,119,0.5)';ctx.lineWidth=1.5;ctx.setLineDash([4,3]);
+      ctx.beginPath();ctx.moveTo(lx,ty);ctx.lineTo(ipx,cy+imgH);
+      ctx.stroke();ctx.setLineDash([]);
+    }
+
+    ctx.strokeStyle='rgba(37,99,235,0.4)';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+    ctx.beginPath();ctx.moveTo(ox,ty);ctx.lineTo(lx,ty*(1-lx/ox));
+    if(imReal&&drawImg)ctx.lineTo(ipx,cy+imgH);
+    ctx.stroke();ctx.setLineDash([]);
+  }
+
+  const M=pp===0?Infinity:-(pp/p);
+  document.getElementById('c5-info').innerHTML=`p'=${pp.toFixed(1)}<br>M=${M.toFixed(2)}<br>${imReal?'<span style="color:#059669">Real</span>':'<span style="color:#db2777">Virtual</span>'}<br>${M<0?'Invertida':'Direita'}<br>P=${(1000/f).toFixed(1)} dpt`;
+}
+
+function arrowHead(ctx,x,y,deg){
+  const r=deg*Math.PI/180;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x+8*Math.cos(r-Math.PI*0.8),y+8*Math.sin(r-Math.PI*0.8));
+  ctx.lineTo(x+8*Math.cos(r+Math.PI*0.8),y+8*Math.sin(r+Math.PI*0.8));
+  ctx.closePath();ctx.fill();
+}
+
+function drawPrisma(){
+ const c=document.getElementById('c6');if(!c)return;
+ c.width=c.offsetWidth;
+ const ctx=c.getContext('2d');
+ const W=c.width,H=320;
+ ctx.clearRect(0,0,W,H);
+ ctx.fillStyle='#f1f5f9';ctx.fillRect(0,0,W,H);
+
+ const apAngle=parseFloat(document.getElementById('c6-ang').value);
+ const incAngle=parseFloat(document.getElementById('c6-inc').value);
+ document.getElementById('c6-ang-v').textContent=apAngle+'°';
+ document.getElementById('c6-inc-v').textContent=incAngle+'°';
+
+ const px=W*0.4, py=H*0.15;
+ const prad=apAngle*Math.PI/180;
+ const ph=180;
+ const pbw=ph*Math.tan(prad/2);
+
+ const p1={x:px,y:py};
+ const p2={x:px-pbw,y:py+ph};
+ const p3={x:px+pbw,y:py+ph};
+
+ // Prism
+ ctx.fillStyle='rgba(37,99,235,0.08)';
+ ctx.strokeStyle='rgba(37,99,235,0.6)';ctx.lineWidth=2;
+ ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.lineTo(p3.x,p3.y);ctx.closePath();
+ ctx.fill();ctx.stroke();
+
+ // White incident ray
+ const leftX=px-120, leftY=py+ph*0.45;
+ const hitX=p2.x+10+(p1.x-p2.x)*0.5;
+ const hitY=p2.y+(p1.y-p2.y)*0.5;
+
+ ctx.strokeStyle='rgba(255,255,255,0.8)';ctx.lineWidth=3;
+ ctx.shadowColor='rgba(37,99,235,0.3)';ctx.shadowBlur=6;
+ ctx.beginPath();ctx.moveTo(leftX,leftY);ctx.lineTo(hitX,hitY);ctx.stroke();
+ ctx.shadowBlur=0;
+
+ // Dispersed colors
+ const colors=[
+ {c:'#ff0000',dn:0.04},
+ {c:'#ff7700',dn:0.055},
+ {c:'#ffff00',dn:0.07},
+ {c:'#00ff00',dn:0.085},
+ {c:'#0088ff',dn:0.10},
+ {c:'#4400ff',dn:0.11},
+ {c:'#8800ff',dn:0.125},
+ ];
+ colors.forEach((clr,i)=>{
+ const n=1.45+clr.dn;
+ const ir=incAngle*Math.PI/180;
+ const st2=Math.sin(ir)/n;
+ if(st2>=1)return;
+ const t2=Math.asin(st2);
+ const spread=(i-3)*3.5;
+ const ex=p3.x+60+spread*2;
+ const ey=py+ph*0.7+spread*5;
+ ctx.strokeStyle=clr.c;ctx.lineWidth=1.8;
+ ctx.shadowColor=clr.c;ctx.shadowBlur=4;
+ ctx.beginPath();ctx.moveTo(hitX,hitY);ctx.lineTo(ex,ey);ctx.stroke();
+ ctx.shadowBlur=0;
+ });
+
+ // Labels
+ ctx.fillStyle='rgba(77,163,255,0.7)';ctx.font='12px Arial';ctx.textAlign='center';
+ ctx.fillText(`Prisma (${apAngle}°)`,px,py+ph+20);
+ ctx.fillStyle='rgba(255,255,255,0.6)';ctx.textAlign='right';
+ ctx.fillText('Luz branca →',leftX+30,leftY-8);
+
+ // Spectrum label
+ ctx.fillStyle='rgba(37,99,235,0.4)';ctx.font='11px Arial';ctx.textAlign='left';
+ ctx.fillText('V',p3.x+75,py+ph*0.55);
+ ctx.fillText('R',p3.x+85,py+ph*0.85);
+}
+
+// ─── CANVAS 7: MICROSCÓPIO ───
+function drawMicroscopio(){
+ const c=document.getElementById('c7');if(!c)return;
+ c.width=c.offsetWidth;
+ const ctx=c.getContext('2d');
+ const W=c.width,H=300;
+ ctx.clearRect(0,0,W,H);
+ ctx.fillStyle='#f1f5f9';ctx.fillRect(0,0,W,H);
+
+ const cy=H/2;
+ // Axis
+ ctx.strokeStyle='#cbd5e1';ctx.lineWidth=1;ctx.setLineDash([5,4]);
+ ctx.beginPath();ctx.moveTo(20,cy);ctx.lineTo(W-20,cy);ctx.stroke();
+ ctx.setLineDash([]);
+
+ // Objective lens (left)
+ const l1x=W*0.28;
+ drawLensShape(ctx,l1x,cy,50,'conv','#22d3a5');
+ ctx.fillStyle='#059669';ctx.font='11px monospace';ctx.textAlign='center';ctx.fillText('Objectiva',l1x,cy+55);
+
+ // Ocular lens (right)
+ const l2x=W*0.72;
+ drawLensShape(ctx,l2x,cy,50,'conv','#a855f7');
+ ctx.fillStyle='#7c3aed';ctx.font='11px monospace';ctx.textAlign='center';ctx.fillText('Ocular',l2x,cy+55);
+
+ // Object (tiny)
+ ctx.strokeStyle='#2563eb';ctx.fillStyle='#2563eb';ctx.lineWidth=2;
+ ctx.shadowColor='rgba(37,99,235,0.3)';ctx.shadowBlur=6;
+ ctx.beginPath();ctx.moveTo(l1x-70,cy);ctx.lineTo(l1x-70,cy-12);ctx.stroke();
+ arrowHead(ctx,l1x-70,cy-12,270);ctx.shadowBlur=0;
+ ctx.fillStyle='rgba(255,224,102,0.6)';ctx.font='10px Arial';ctx.textAlign='center';
+ ctx.fillText('Obj.',l1x-70,cy+12);
+
+ // Intermediate image (between lenses)
+ const mid=(l1x+l2x)/2;
+ ctx.strokeStyle='#059669';ctx.fillStyle='#059669';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+ ctx.shadowColor='#22d3a5';ctx.shadowBlur=5;
+ ctx.beginPath();ctx.moveTo(mid,cy);ctx.lineTo(mid,cy+35);ctx.stroke();
+ arrowHead(ctx,mid,cy+35,90);ctx.setLineDash([]);ctx.shadowBlur=0;
+ ctx.fillStyle='rgba(34,211,165,0.7)';ctx.font='10px Arial';
+ ctx.fillText("I'm (ampliada\ninvertida)",mid,cy+52);
+
+ // Final image (to the right)
+ ctx.strokeStyle='#7c3aed';ctx.fillStyle='#7c3aed';ctx.lineWidth=1.5;ctx.setLineDash([3,3]);
+ ctx.shadowColor='#a855f7';ctx.shadowBlur=5;
+ ctx.beginPath();ctx.moveTo(l2x+80,cy);ctx.lineTo(l2x+80,cy+60);ctx.stroke();
+ arrowHead(ctx,l2x+80,cy+60,90);ctx.setLineDash([]);ctx.shadowBlur=0;
+ ctx.fillStyle='rgba(168,85,247,0.7)';ctx.font='10px Arial';
+ ctx.fillText("Imagem final\n(muito ampliada)",l2x+80,cy+76);
+
+ // Light ray sketch
+ ctx.strokeStyle='rgba(37,99,235,0.3)';ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(l1x-70,cy-12);ctx.lineTo(l1x,cy-10);ctx.lineTo(mid,cy+35);ctx.lineTo(l2x,cy+30);ctx.lineTo(l2x+80,cy+60);ctx.stroke();
+
+ // Labels
+ ctx.fillStyle='#64748b';ctx.font='11px Arial';ctx.textAlign='center';
+ ctx.fillText('M total = M_obj × M_oc',W/2,30);
+}
+
+function drawLensShape(ctx,x,cy,h,type,color){
+ ctx.strokeStyle=color;ctx.fillStyle=color.replace(')',',0.08)').replace('rgb','rgba');ctx.lineWidth=2;
+ ctx.beginPath();
+ ctx.moveTo(x,cy-h);
+ ctx.quadraticCurveTo(x+18,cy,x,cy+h);
+ ctx.quadraticCurveTo(x-18,cy,x,cy-h);
+ ctx.fill();ctx.stroke();
+}
+
+
+// ══════════════════════════════════════
+// Sistema de gamificação e progresso — agora sincronizado com o backend
+// (o estado local mantém a UI rápida; cada alteração é enviada ao servidor)
+// ══════════════════════════════════════
+let studentXP=0;
+let lessonsDone=[];
+let finalScoreStored='—';
+let currentUser=null; // {id, nome, papel}
+
+function rankName(xp){
+ if(xp>=320)return '🏆 Físico Jovem';
+ if(xp>=220)return '🥇 Especialista em Lentes';
+ if(xp>=120)return '🥈 Mestre dos Espelhos';
+ if(xp>=50)return '🥉 Explorador da Luz';
+ return 'Iniciante da Luz';
+}
+
+// Envia o estado actual ao servidor (debounced para não disparar pedidos a mais)
+let _syncTimeout=null;
+function syncProgresso(){
+ clearTimeout(_syncTimeout);
+ _syncTimeout=setTimeout(()=>{
+ fetch('/api/progresso',{
+ method:'POST',
+ headers:{'Content-Type':'application/json'},
+ body:JSON.stringify({xp:studentXP, aulas_concluidas:lessonsDone, nota_final: finalScoreStored==='—'?null:finalScoreStored})
+ }).catch(()=>{ /* falha silenciosa: mantém-se o estado local, tenta de novo na próxima alteração */ });
+ },400);
+}
+
+async function carregarProgressoInicial(){
+ try{
+ const r=await fetch('/api/me');
+ if(!r.ok){ window.location.href='/login.html'; return; }
+ currentUser=await r.json();
+ if(currentUser.papel==='professor'){ window.location.href='/professor.html'; return; }
+ const badge=document.getElementById('hUserBadge'); if(badge)badge.textContent=currentUser.nome;
+
+ const rp=await fetch('/api/progresso');
+ if(rp.ok){
+ const data=await rp.json();
+ studentXP=data.xp||0;
+ lessonsDone=data.aulas_concluidas||[];
+ finalScoreStored=data.nota_final || '—';
+ }
+ updateDashboard();
+ carregarPrazoEAvisosIntro();
+ }catch(err){
+ // Se o servidor estiver em baixo, o módulo continua a funcionar localmente nesta sessão
+ updateDashboard();
+ }
+}
+
+async function sairModulo(){
+ await fetch('/api/logout',{method:'POST'});
+ window.location.href='/login.html';
+}
+
+function addXP(v){
+ studentXP+=v;
+ updateDashboard();
+ syncProgresso();
+}
+function completeLesson(n){
+ if(!lessonsDone.includes(n)){lessonsDone.push(n);addXP(15);}
+ updateDashboard();
+ syncProgresso();
+}
+function updateDashboard(){
+ const level=Math.max(1,Math.floor(studentXP/80)+1);
+ const pct=Math.min(100,(studentXP%80)/80*100);
+ const rank=rankName(studentXP);
+ const set=(id,val)=>{const e=document.getElementById(id); if(e)e.textContent=val;};
+ set('dashXP',studentXP+' XP'); set('floatXP',studentXP+' XP'); set('dashLevel',level); set('dashRank',rank); set('floatRank',rank);
+ set('dashLessons',lessonsDone.length+'/6'); set('dashFinal',finalScoreStored);
+ const fill=document.getElementById('xpFill'); if(fill)fill.style.width=pct+'%';
+ lessonsDone.forEach(n=>{const e=document.getElementById('path'+n); if(e)e.classList.add('done');});
+ document.querySelectorAll('[data-medal]').forEach(m=>{ if(studentXP>=Number(m.dataset.medal))m.classList.add('on'); });
+}
+function miniAns(el,correct){
+ const block=el.closest('.mini-q');
+ if(block.dataset.done==='1')return;
+ block.dataset.done='1';
+ block.querySelectorAll('.q-opt').forEach(o=>o.classList.add('off'));
+ el.classList.add(correct?'right':'wrong');
+ if(!correct){
+ const right=[...block.querySelectorAll('.q-opt')].find(o=>o.getAttribute('onclick').includes('true'));
+ if(right)right.classList.add('right');
+ }
+ const feedback=block.querySelector('.q-fb.'+(correct?'ok':'err'));
+ if(feedback)feedback.classList.add('show');
+ addXP(correct?6:2);
+ fetch('/api/progresso/resposta',{
+ method:'POST', headers:{'Content-Type':'application/json'},
+ body:JSON.stringify({questao_id: block.id || ('mini-'+Date.now()), resposta: el.textContent.trim(), correta: correct})
+ }).catch(()=>{});
+}
+
+function markOpenDone(el){
+ const block=el.closest('.mini-q');
+ if(block.dataset.done==='1')return;
+ if(el.value.trim().length<3)return;
+ block.dataset.done='1';
+ el.disabled=true;
+ addXP(6);
+}
+
+// ══════════════════════════════════════
+// AVALIAÇÃO FINAL — 25 QUESTÕES
+// ══════════════════════════════════════
+const QAns={1:'a',2:'c',3:'b',4:'a',5:'a',6:'b',7:'c',8:'b',9:'a',10:'a',11:'a',12:'a',13:'b',14:'a',15:'a',16:'a',17:'a',18:'a',19:'a',20:'a',21:'a',22:'a',23:'a',24:'a',25:'a'};
+let qScore=0,qAnswered={},qCur=1;
+
+function ans(q,opt){
+ if(qAnswered[q])return;
+ qAnswered[q]=opt;
+ const qb=document.getElementById('qb'+q);
+ const opts=qb.querySelectorAll('.q-opt');
+ const letters=['a','b','c','d'];
+ opts.forEach((o,i)=>{
+ o.classList.add('off');
+ if(letters[i]===QAns[q])o.classList.add('right');
+ else if(letters[i]===opt&&opt!==QAns[q])o.classList.add('wrong');
+ });
+ const correct=opt===QAns[q];
+ if(correct)qScore++;
+ document.getElementById('f'+q+(correct?'ok':'err')).classList.add('show');
+ fetch('/api/progresso/resposta',{
+ method:'POST', headers:{'Content-Type':'application/json'},
+ body:JSON.stringify({questao_id:'final-'+q, resposta:opt, correta:correct})
+ }).catch(()=>{});
+ setTimeout(()=>{
+ if(q<25){ qb.style.display='none'; document.getElementById('qb'+(q+1)).style.display='block'; }
+ else showQScore();
+ },900);
+}
+
+function showQScore(){
+ const box=document.getElementById('qscore'); box.classList.add('show');
+ const pct=qScore/25; const ring=document.getElementById('sring');
+ ring.style.background=`conic-gradient(var(--azul) ${pct*100}%, var(--bg3) 0%)`;
+ document.getElementById('sval').textContent=qScore+'/25';
+ let msg='💪 Continua!'; let sub='Revê as aulas e tenta novamente. O importante é perceber os conceitos e não decorar.';
+ if(qScore>=22){msg='🏆 Excelente!';sub='Dominas muito bem a óptica geométrica.';}
+ else if(qScore>=18){msg='👏 Muito bom!';sub='Tens boa base. Revê apenas os pontos em que erraste.';}
+ else if(qScore>=13){msg='📚 Suficiente';sub='Já compreendes a matéria, mas deves praticar mais desenhos de raios e exercícios.';}
+ document.getElementById('smsg').textContent=msg; document.getElementById('ssub').textContent=sub;
+ finalScoreStored=qScore+'/25'; addXP(qScore*3); syncProgresso();
+ const cert=document.getElementById('certBox'); if(cert){ cert.classList.add('show'); document.getElementById('certScore').textContent='Resultado final: '+qScore+'/25 · Data: '+new Date().toLocaleDateString('pt-PT'); }
+}
+
+function restartQ(){
+ qScore=0;qAnswered={};qCur=1; document.getElementById('qscore').classList.remove('show'); const cert=document.getElementById('certBox'); if(cert)cert.classList.remove('show');
+ for(let q=1;q<=25;q++){
+ const qb=document.getElementById('qb'+q); qb.style.display=q===1?'block':'none';
+ qb.querySelectorAll('.q-opt').forEach(o=>o.classList.remove('right','wrong','off'));
+ const ok=document.getElementById('f'+q+'ok'); const err=document.getElementById('f'+q+'err');
+ if(ok)ok.classList.remove('show'); if(err)err.classList.remove('show');
+ }
+}
+
+carregarProgressoInicial();
+
+// ══════════════════════════════════════
+// COMUNICAÇÃO — mural de avisos, fórum e prazo da avaliação
+// ══════════════════════════════════════
+function escapeHtml(s){
+ const d=document.createElement('div'); d.textContent=s==null?'':String(s); return d.innerHTML;
+}
+function formatarData(iso){
+ try{ return new Date(iso).toLocaleString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}); }
+ catch(e){ return iso; }
+}
+
+async function carregarPrazoEAvisosIntro(){
+ try{
+ const rp=await fetch('/api/prazo');
+ if(rp.ok){
+ const {prazo_final}=await rp.json();
+ const banner=document.getElementById('prazoBanner');
+ const texto=document.getElementById('prazoTexto');
+ if(prazo_final && banner && texto){
+ banner.style.display='block';
+ texto.innerHTML=textoPrazo(prazo_final);
+ }
+ }
+ const ra=await fetch('/api/avisos');
+ if(ra.ok){
+ const {avisos}=await ra.json();
+ const prev=document.getElementById('avisosPreview');
+ const lista=document.getElementById('avisosPreviewLista');
+ if(avisos.length>0 && prev && lista){
+ prev.style.display='block';
+ lista.innerHTML=avisos.slice(0,2).map(a=>`
+ <div style="padding:10px 0;border-bottom:1px solid var(--borda);">
+ <div style="font-weight:700;font-size:13px;color:var(--texto);">${escapeHtml(a.titulo)}</div>
+ <div style="font-size:12px;color:var(--texto2);margin-top:3px;">${escapeHtml(a.mensagem)}</div>
+ <div style="font-size:11px;color:var(--texto3);margin-top:4px;">${escapeHtml(a.autor_nome)} · ${formatarData(a.criado_em)}</div>
+ </div>`).join('');
+ }
+ }
+ }catch(e){ /* silencioso: comunicação é um extra, não deve bloquear o módulo */ }
+}
+
+function textoPrazo(prazo_final){
+ const data=new Date(prazo_final);
+ const agora=new Date();
+ const passou=data < agora;
+ const dataFmt=data.toLocaleString('pt-PT',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+ if(passou) return `<span style="color:var(--vermelho);font-weight:700;">O prazo terminou em ${dataFmt}.</span> Fala com o professor se ainda precisares de completar a avaliação.`;
+ const diffMs=data-agora;
+ const dias=Math.floor(diffMs/(1000*60*60*24));
+ const horas=Math.floor((diffMs%(1000*60*60*24))/(1000*60*60));
+ let restante = dias>0 ? `${dias} dia${dias===1?'':'s'}` : `${horas} hora${horas===1?'':'s'}`;
+ return `Tens até <strong>${dataFmt}</strong> para concluir a avaliação final — faltam ${restante}.`;
+}
+
+async function carregarComunicacao(){
+ try{
+ const rp=await fetch('/api/prazo');
+ if(rp.ok){
+ const {prazo_final}=await rp.json();
+ const banner=document.getElementById('prazoBannerComm');
+ const texto=document.getElementById('prazoTextoComm');
+ if(prazo_final && banner && texto){ banner.style.display='block'; texto.innerHTML=textoPrazo(prazo_final); }
+ else if(banner){ banner.style.display='none'; }
+ }
+ }catch(e){}
+
+ try{
+ const ra=await fetch('/api/avisos');
+ if(ra.ok){
+ const {avisos}=await ra.json();
+ const lista=document.getElementById('listaAvisos');
+ const vazio=document.getElementById('semAvisos');
+ if(avisos.length===0){ vazio.style.display='block'; lista.innerHTML=''; }
+ else{
+ vazio.style.display='none';
+ lista.innerHTML=avisos.map(a=>`
+ <div style="padding:14px;border:1px solid var(--borda);border-radius:10px;background:var(--bg2);">
+ <div style="font-weight:700;font-size:14px;color:var(--texto);">${escapeHtml(a.titulo)}</div>
+ <div style="font-size:13px;color:var(--texto2);margin-top:6px;line-height:1.5;">${escapeHtml(a.mensagem)}</div>
+ <div style="font-size:11px;color:var(--texto3);margin-top:8px;">${escapeHtml(a.autor_nome)} · ${formatarData(a.criado_em)}</div>
+ </div>`).join('');
+ }
+ }
+ }catch(e){}
+
+ try{
+ const rf=await fetch('/api/forum');
+ if(rf.ok){
+ const {mensagens}=await rf.json();
+ const lista=document.getElementById('listaForum');
+ if(mensagens.length===0){
+ lista.innerHTML='<p style="color:var(--texto3);font-size:13px;">Ainda não há mensagens. Sê o primeiro a perguntar!</p>';
+ }else{
+ lista.innerHTML=mensagens.map(m=>`
+ <div style="padding:12px 14px;border:1px solid var(--borda);border-radius:10px;background:${m.autor_papel==='professor'?'var(--azul-bg)':'var(--bg2)'};">
+ <div style="font-size:12px;font-weight:700;color:${m.autor_papel==='professor'?'var(--azul2)':'var(--texto)'};">${escapeHtml(m.autor_nome)}${m.autor_papel==='professor'?' · Professor':''}</div>
+ <div style="font-size:13px;color:var(--texto);margin-top:4px;line-height:1.5;">${escapeHtml(m.mensagem)}</div>
+ <div style="font-size:11px;color:var(--texto3);margin-top:6px;">${formatarData(m.criado_em)}</div>
+ </div>`).join('');
+ }
+ }
+ }catch(e){}
+}
+
+async function enviarForum(){
+ const input=document.getElementById('forumInput');
+ const texto=input.value.trim();
+ if(!texto)return;
+ input.disabled=true;
+ try{
+ await fetch('/api/forum',{
+ method:'POST', headers:{'Content-Type':'application/json'},
+ body:JSON.stringify({mensagem:texto})
+ });
+ input.value='';
+ await carregarComunicacao();
+ }catch(e){}
+ input.disabled=false;
+}
+
+</script>
+<div class="assinatura">Amarildo D. Cumbane</div>
+</body>
+</html>

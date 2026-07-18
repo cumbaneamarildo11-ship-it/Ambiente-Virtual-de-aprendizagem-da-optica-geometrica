@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Entrar — AVA Óptica Geométrica</title>
+<style>
+:root{
+ --bg:#f8fafc; --bg2:#f1f5f9; --bg3:#e2e8f0; --card:#ffffff;
+ --borda:#cbd5e1; --azul:#2563eb; --azul2:#1d4ed8; --azul-bg:#eff6ff;
+ --texto:#0f172a; --texto2:#475569; --texto3:#64748b; --vermelho:#dc2626;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{
+ font-family: Arial, Helvetica, sans-serif; background: var(--bg); color: var(--texto);
+ min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+}
+.box{
+ width:100%; max-width:400px; background: var(--card); border:1px solid var(--borda);
+ border-radius:12px; padding:36px 32px; box-shadow:0 4px 12px rgba(0,0,0,0.05);
+}
+.hero-tag{
+ display:inline-flex; align-items:center; gap:6px; background: var(--azul-bg);
+ border:1px solid #93c5fd; color: var(--azul); padding:5px 14px; border-radius:99px;
+ font-size:12px; font-weight:600; margin-bottom:16px;
+}
+h1{ font-size:24px; color: var(--azul2); margin-bottom:6px; font-weight:700; }
+.sub{ color:var(--texto3); font-size:13px; margin-bottom:24px; }
+.tabs{ display:flex; gap:6px; margin-bottom:22px; }
+.tab{
+ flex:1; text-align:center; padding:9px; border-radius:8px; font-size:13px; font-weight:600;
+ cursor:pointer; border:1px solid var(--borda); color:var(--texto2); background: var(--bg2);
+}
+.tab.active{ background: var(--azul); border-color: var(--azul); color:#fff; }
+form{ display:none; flex-direction:column; gap:14px; }
+form.active{ display:flex; }
+label{ font-size:12px; color:var(--texto2); font-weight:600; margin-bottom:4px; display:block; }
+input, select{
+ width:100%; padding:11px 12px; border:1px solid var(--borda); border-radius:8px;
+ font-size:14px; font-family:inherit; background: var(--bg2); color: var(--texto);
+}
+input:focus, select:focus{ outline:2px solid var(--azul); outline-offset:1px; }
+button{
+ margin-top:6px; padding:12px; background: var(--azul); color:#fff; font-weight:700;
+ font-size:14px; border:none; border-radius:8px; cursor:pointer; font-family:inherit;
+}
+button:hover{ background: var(--azul2); }
+.erro{
+ display:none; background:rgba(220,38,38,0.08); border:1px solid var(--vermelho);
+ color: var(--vermelho); padding:10px 14px; border-radius:8px; font-size:13px; margin-bottom:14px;
+}
+.erro.show{ display:block; }
+</style>
+</head>
+<body>
+<div class="box">
+ <div class="hero-tag">💡 AVA · Óptica Geométrica</div>
+ <h1>Bem-vindo(a)</h1>
+ <p class="sub">Entra na tua conta ou cria uma nova para começar o módulo.</p>
+
+ <div class="tabs">
+  <div class="tab active" id="tab-login" onclick="mudarTab('login')">Entrar</div>
+  <div class="tab" id="tab-registo" onclick="mudarTab('registo')">Criar conta</div>
+ </div>
+
+ <div class="erro" id="erro"></div>
+
+ <form id="form-login" class="active" onsubmit="return fazerLogin(event)">
+  <div>
+   <label>Email</label>
+   <input id="login-email" required type="email"/>
+  </div>
+  <div>
+   <label>Senha</label>
+   <input id="login-senha" required type="password"/>
+  </div>
+  <button type="submit">Entrar</button>
+ </form>
+
+ <form id="form-registo" onsubmit="return fazerRegisto(event)">
+  <div>
+   <label>Nome</label>
+   <input id="reg-nome" required type="text"/>
+  </div>
+  <div>
+   <label>Email</label>
+   <input id="reg-email" required type="email"/>
+  </div>
+  <div>
+   <label>Senha (mín. 6 caracteres)</label>
+   <input id="reg-senha" minlength="6" required type="password"/>
+  </div>
+  <div>
+   <label>Sou</label>
+   <select id="reg-papel">
+    <option value="aluno">Aluno</option>
+    <option value="professor">Professor</option>
+   </select>
+  </div>
+  <button type="submit">Criar conta</button>
+ </form>
+</div>
+
+<script>
+function mudarTab(qual){
+ document.getElementById('tab-login').classList.toggle('active', qual==='login');
+ document.getElementById('tab-registo').classList.toggle('active', qual==='registo');
+ document.getElementById('form-login').classList.toggle('active', qual==='login');
+ document.getElementById('form-registo').classList.toggle('active', qual==='registo');
+ esconderErro();
+}
+function mostrarErro(msg){
+ const e=document.getElementById('erro');
+ e.textContent=msg; e.classList.add('show');
+}
+function esconderErro(){
+ document.getElementById('erro').classList.remove('show');
+}
+function redirecionar(papel){
+ window.location.href = papel==='professor' ? '/professor.html' : '/modulo_optica.html';
+}
+
+async function fazerLogin(ev){
+ ev.preventDefault();
+ esconderErro();
+ const email=document.getElementById('login-email').value.trim();
+ const senha=document.getElementById('login-senha').value;
+ try{
+  const r = await fetch('/api/login',{
+   method:'POST', headers:{'Content-Type':'application/json'},
+   body: JSON.stringify({email, senha})
+  });
+  const data = await r.json();
+  if(!r.ok){ mostrarErro(data.erro || 'Não foi possível entrar.'); return false; }
+  redirecionar(data.papel);
+ }catch(err){ mostrarErro('Erro de ligação ao servidor.'); }
+ return false;
+}
+
+async function fazerRegisto(ev){
+ ev.preventDefault();
+ esconderErro();
+ const nome=document.getElementById('reg-nome').value.trim();
+ const email=document.getElementById('reg-email').value.trim();
+ const senha=document.getElementById('reg-senha').value;
+ const papel=document.getElementById('reg-papel').value;
+ try{
+  const r = await fetch('/api/registo',{
+   method:'POST', headers:{'Content-Type':'application/json'},
+   body: JSON.stringify({nome, email, senha, papel})
+  });
+  const data = await r.json();
+  if(!r.ok){ mostrarErro(data.erro || 'Não foi possível criar a conta.'); return false; }
+  redirecionar(data.papel);
+ }catch(err){ mostrarErro('Erro de ligação ao servidor.'); }
+ return false;
+}
+
+// Se já estiver logado, redirecciona automaticamente
+(async ()=>{
+ try{
+  const r = await fetch('/api/me');
+  if(r.ok){ const data = await r.json(); redirecionar(data.papel); }
+ }catch(e){}
+})();
+</script>
+</body>
+</html>
